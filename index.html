@@ -1,72 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Enga Hrahsel | enga.in</title>
+  <meta charset="UTF-8">
+  <title>ENGA Platform</title>
 
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      font-family: Arial;
+      background: #0b1220;
+      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      text-align: center;
-    }
-
-    .container {
-      max-width: 600px;
-      padding: 20px;
+      flex-direction: column;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 40px;
       margin-bottom: 10px;
     }
 
     p {
-      font-size: 1.1rem;
-      color: #94a3b8;
-      line-height: 1.6;
+      color: #aaa;
+      margin-bottom: 30px;
     }
 
-    .tag {
-      display: inline-block;
-      margin-top: 15px;
-      padding: 6px 12px;
-      background: #1e293b;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: #38bdf8;
+    .btn {
+      padding: 12px 20px;
+      margin: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 6px;
     }
 
-    footer {
-      margin-top: 30px;
-      font-size: 0.8rem;
-      color: #64748b;
+    .login {
+      background: #4f7cff;
+      color: white;
+    }
+
+    .login:hover {
+      background: #3b66ff;
+    }
+
+    .admin {
+      background: transparent;
+      border: 1px solid #4f7cff;
+      color: white;
+    }
+
+    .admin:hover {
+      background: #1a2a4a;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Enga Hrahsel</h1>
-    <p>
-      Welcome to <b>enga.in</b><br/>
-      A developing digital system for governance, data, and community management.
-    </p>
 
-    <div class="tag">
-      GitHub Pages Website
-    </div>
+<h1>ENGA Platform</h1>
+<p>Village Council Management System</p>
 
-    <footer>
-      © 2026 Enga Hrahsel. All rights reserved.
-    </footer>
-  </div>
+<button class="btn login" onclick="goLogin()">Login</button>
+<button class="btn admin" onclick="goAdmin()">Admin</button>
+
+<script>
+function goLogin() {
+  window.location.href = "/login.html";
+}
+
+function goAdmin() {
+  window.location.href = "/admin.html";
+}
+</script>
+
 </body>
 </html>
