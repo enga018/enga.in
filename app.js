@@ -98,6 +98,62 @@ async function getWorkerNumberRange(tenantId, workerId) {
   return data;
 }
 
+// Get app codes assigned to a worker (e.g. ['property', 'family'])
+async function getWorkerModules(tenantId, workerId) {
+  const { data } = await supabaseClient
+    .from("worker_module_assignments")
+    .select("app_code")
+    .eq("tenant_id", tenantId)
+    .eq("worker_id", workerId);
+  return (data || []).map(r => r.app_code);
+}
+
+// Assign a module to a worker
+async function assignModuleToWorker(tenantId, workerId, appCode) {
+  const { error } = await supabaseClient
+    .from("worker_module_assignments")
+    .upsert({ tenant_id: tenantId, worker_id: workerId, app_code: appCode,
+               assigned_by: (await getUser())?.id },
+             { onConflict: "tenant_id,worker_id,app_code" });
+  return !error;
+}
+
+// Remove a module from a worker
+async function removeModuleFromWorker(tenantId, workerId, appCode) {
+  const { error } = await supabaseClient
+    .from("worker_module_assignments")
+    .delete()
+    .eq("tenant_id", tenantId)
+    .eq("worker_id", workerId)
+    .eq("app_code", appCode);
+  return !error;
+}
+
+// Get all workers for a tenant (admin use)
+async function getTenantWorkers(tenantId) {
+  const { data } = await supabaseClient
+    .from("profiles")
+    .select("id, full_name, phone, role, status, created_at")
+    .eq("tenant_id", tenantId)
+    .in("role", ["worker", "supervisor"])
+    .order("full_name");
+  return data || [];
+}
+
+// Redirect to the correct dashboard based on role and subdomain
+function redirectToDashboard(role) {
+  const ctx = window.tenantContext;
+  if (role === "super_admin" && ctx.type === "root") {
+    window.location.href = "dashboard.html";
+  } else if (["admin", "worker", "supervisor"].includes(role) && ctx.type === "tenant") {
+    window.location.href = "dashboard.html";
+  } else if (role === "super_admin") {
+    window.location.href = "https://enga.in/dashboard.html";
+  } else {
+    window.location.href = "dashboard.html";
+  }
+}
+
 function waitForSupabase() {
   return new Promise((resolve) => {
     const check = () => {
