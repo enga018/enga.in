@@ -1,2 +1,21 @@
 # enga.in
-Official website and digital platform for Enga Hrahsel (enga.in) – dashboards, tools, and civic systems.
+
+Official website and digital platform of **Enga Hrahsel**.
+
+This repository hosts the frontend website for:
+
+- Personal digital presence
+- Civic and administrative tools
+- Future dashboards and web applications
+- Experimental web systems (tax collection, data management, etc.)
+
+---
+
+## 🌐 Live Site
+Once GitHub Pages is enabled:
+
+https://enga018.github.io/enga.in/
+
+---
+
+## 🧱 Project Structure
