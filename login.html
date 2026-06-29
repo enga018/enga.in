@@ -114,3 +114,14 @@ async function login() {
 
 </body>
 </html>
+<script>
+  // your login() function here
+
+  window.addEventListener("load", async () => {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+      window.location.href = "admin.html";
+    }
+  });
+</script>
