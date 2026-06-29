@@ -5,6 +5,7 @@
   <title>ENGA Platform Admin</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
 
   <style>
     body {
@@ -56,9 +57,8 @@
 <div class="container">
 
   <h3>Create Village</h3>
-
   <input id="name" placeholder="Village Name">
-  <input id="subdomain" placeholder="Subdomain (e.g. nsnvc)">
+  <input id="subdomain" placeholder="Subdomain">
   <button onclick="createVillage()">Create</button>
 
   <h3>Villages</h3>
@@ -67,41 +67,34 @@
 </div>
 
 <script>
-const supabase = window.supabase.createClient(
-  "https://ebfasxnaabcutcrpwpxp.supabase.co",
-  "sb_publishable_-vezxvTfAsS1e2xilOq5Bw_aPqsomZr"
-);
 
-// check login
 async function checkAuth() {
-  const { data } = await supabase.auth.getUser();
+  const { data } = await supabaseClient.auth.getUser();
 
   if (!data.user) {
-    window.location.href = "/login.html";
+    window.location.href = "login.html";
   }
 }
+
 checkAuth();
 
-// create village
 async function createVillage() {
   const name = document.getElementById("name").value;
   const subdomain = document.getElementById("subdomain").value;
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from("villages")
     .insert([{ name, subdomain }]);
 
   if (error) {
     alert("Error creating village");
   } else {
-    alert("Village created");
     loadVillages();
   }
 }
 
-// load villages
 async function loadVillages() {
-  const { data } = await supabase
+  const { data } = await supabaseClient
     .from("villages")
     .select("*");
 
@@ -109,22 +102,17 @@ async function loadVillages() {
   list.innerHTML = "";
 
   data.forEach(v => {
-    list.innerHTML += `
-      <div class="card">
-        <b>${v.name}</b><br>
-        ${v.subdomain}.enga.in
-      </div>
-    `;
+    list.innerHTML += `<div class="card"><b>${v.name}</b><br>${v.subdomain}.enga.in</div>`;
   });
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
 }
 
 loadVillages();
 
-// logout
-async function logout() {
-  await supabase.auth.signOut();
-  window.location.href = "/login.html";
-}
 </script>
 
 </body>
