@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — enga.in</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -104,29 +104,33 @@ window.addEventListener("load", async () => {
   await waitForSupabase();
 
   const ctx = await getProfile();
-  if (!ctx) { window.location.href = "login.html"; return; }
+  // ctx may be null if profiles row doesn't exist yet — still show dashboard if user is authenticated
+  const user = ctx?.user;
+  const profile = ctx?.profile;
+  const tenant = ctx?.tenant;
 
-  const { user, profile, tenant } = ctx;
-
-  document.getElementById("userName").textContent = profile.full_name || user.email;
+  document.getElementById("userName").textContent = profile?.full_name || user?.email || "User";
   document.getElementById("tenantName").textContent = tenant?.name || "Village Council";
 
   const roleLabel = { super_admin: "Super Admin", admin: "Admin", worker: "Field Worker" };
-  document.getElementById("roleBadge").textContent = roleLabel[profile.role] || profile.role || "User";
+  document.getElementById("roleBadge").textContent = roleLabel[profile?.role] || profile?.role || "User";
 
+  const tenantId = profile?.tenant_id;
   const [propRes, familyRes] = await Promise.all([
-    supabaseClient.from("properties").select("id", { count: "exact", head: true }).eq("tenant_id", profile.tenant_id),
+    tenantId
+      ? supabaseClient.from("properties").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId)
+      : Promise.resolve({ count: 0 }),
     supabaseClient.from("families").select("id", { count: "exact", head: true })
   ]);
   document.getElementById("statProperties").textContent = propRes.count ?? "—";
   document.getElementById("statHouseholds").textContent = familyRes.count ?? "—";
 
-  const { data: recent } = await supabaseClient
+  const { data: recent } = tenantId ? await supabaseClient
     .from("properties")
     .select("id, property_code, building_type, status, created_at")
-    .eq("tenant_id", profile.tenant_id)
+    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(8) : { data: [] };
 
   const list = document.getElementById("recentList");
   if (!recent || recent.length === 0) {

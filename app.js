@@ -26,8 +26,9 @@ window.addEventListener("error", (e) => {
 });
 
 async function getUser() {
-  const { data } = await supabaseClient.auth.getUser();
-  return data?.user ?? null;
+  // getSession reads localStorage (no network call) — faster and more reliable on page load
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  return session?.user ?? null;
 }
 
 async function requireAuth() {
