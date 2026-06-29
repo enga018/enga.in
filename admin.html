@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ENGA Platform Admin</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b1220;
+      color: white;
+      margin: 0;
+    }
+
+    header {
+      background: #111a2e;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: #16213e;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+
+    button {
+      background: #4f7cff;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>ENGA Platform Admin</div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <h3>Create Village</h3>
+
+  <input id="name" placeholder="Village Name">
+  <input id="subdomain" placeholder="Subdomain (e.g. nsnvc)">
+  <button onclick="createVillage()">Create</button>
+
+  <h3>Villages</h3>
+  <div id="list"></div>
+
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://ebfasxnaabcutcrpwpxp.supabase.co",
+  "sb_publishable_-vezxvTfAsS1e2xilOq5Bw_aPqsomZr"
+);
+
+// check login
+async function checkAuth() {
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    window.location.href = "/login.html";
+  }
+}
+checkAuth();
+
+// create village
+async function createVillage() {
+  const name = document.getElementById("name").value;
+  const subdomain = document.getElementById("subdomain").value;
+
+  const { error } = await supabase
+    .from("villages")
+    .insert([{ name, subdomain }]);
+
+  if (error) {
+    alert("Error creating village");
+  } else {
+    alert("Village created");
+    loadVillages();
+  }
+}
+
+// load villages
+async function loadVillages() {
+  const { data } = await supabase
+    .from("villages")
+    .select("*");
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach(v => {
+    list.innerHTML += `
+      <div class="card">
+        <b>${v.name}</b><br>
+        ${v.subdomain}.enga.in
+      </div>
+    `;
+  });
+}
+
+loadVillages();
+
+// logout
+async function logout() {
+  await supabase.auth.signOut();
+  window.location.href = "/login.html";
+}
+</script>
+
+</body>
+</html>
