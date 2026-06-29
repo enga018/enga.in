@@ -1,154 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Admin Dashboard</title>
-
+  <title>Dashboard — enga.in</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
-  <script src="core.js"></script>
-
-  <style>
-    body { font-family: Arial; margin: 0; background:#0b1220; color:#fff; }
-
-    header {
-      display:flex; justify-content:space-between;
-      padding:15px; background:#111a2e;
-    }
-
-    .container { padding:20px; }
-
-    .grid { display:flex; gap:10px; flex-wrap:wrap; }
-
-    .card {
-      flex:1; min-width:120px;
-      background:#16213e; padding:15px; border-radius:8px;
-    }
-
-    .tabs button {
-      margin:5px; padding:10px;
-      background:#4f7cff; border:none; color:#fff;
-    }
-
-    #moduleArea {
-      margin-top:15px;
-      background:#16213e;
-      padding:15px;
-      border-radius:8px;
-    }
-
-    input {
-      width:100%;
-      padding:10px;
-      margin:5px 0;
-    }
-
-    button.action {
-      padding:10px;
-      background:#4f7cff;
-      border:none;
-      color:#fff;
-      margin:5px 0;
-      width:100%;
-    }
-
-    @media(max-width:768px){
-      .grid { flex-direction:column; }
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="min-h-screen bg-gray-50">
 
-<body>
+  <!-- Header -->
+  <header class="bg-blue-800 text-white shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-bold text-sm leading-none" id="tenantName">enga.in</div>
+          <div class="text-blue-300 text-xs mt-0.5" id="userName">Loading…</div>
+        </div>
+      </div>
+      <button onclick="logout()" class="text-blue-200 hover:text-white text-sm flex items-center gap-1 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </header>
 
-<header>
-  <div>Village Dashboard</div>
-  <button onclick="logout()">Logout</button>
-</header>
+  <main class="max-w-4xl mx-auto px-4 py-6">
 
-<div class="container">
+    <div class="mb-6">
+      <span id="roleBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"></span>
+    </div>
 
-  <div class="grid">
-    <div class="card">Properties: <span id="totalProperties">0</span></div>
-    <div class="card">Families: <span id="totalFamilies">0</span></div>
-    <div class="card">Pending Tax: <span id="pendingTax">₹0</span></div>
-  </div>
+    <!-- Stats -->
+    <div class="grid grid-cols-2 gap-3 mb-8">
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="text-2xl font-bold text-gray-900" id="statProperties">—</div>
+        <div class="text-xs text-gray-500 mt-1">Properties Surveyed</div>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="text-2xl font-bold text-gray-900" id="statHouseholds">—</div>
+        <div class="text-xs text-gray-500 mt-1">Households Registered</div>
+      </div>
+    </div>
 
-  <div class="tabs">
-    <button onclick="show('property')">Property</button>
-    <button onclick="show('family')">Family</button>
-    <button onclick="show('tax')">Tax</button>
-  </div>
+    <!-- Module Cards -->
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Modules</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
 
-  <div id="moduleArea">Select module</div>
+      <a href="survey.html"
+        class="group bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all flex items-start gap-4">
+        <div class="w-12 h-12 bg-blue-50 group-hover:bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Property Survey</div>
+          <div class="text-sm text-gray-500 mt-1">Record building details, ownership, GPS, and photos.</div>
+          <div class="mt-3 text-xs font-medium text-blue-600">Start Survey →</div>
+        </div>
+      </a>
 
-</div>
+      <a href="household.html"
+        class="group bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:border-green-300 hover:shadow-md transition-all flex items-start gap-4">
+        <div class="w-12 h-12 bg-green-50 group-hover:bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Household Register</div>
+          <div class="text-sm text-gray-500 mt-1">Register households and family members for residential units.</div>
+          <div class="mt-3 text-xs font-medium text-green-600">Add Household →</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Recent Surveys -->
+    <div class="mt-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Recent Surveys</h2>
+      <div id="recentList" class="space-y-2">
+        <div class="text-sm text-gray-400 py-4 text-center">Loading…</div>
+      </div>
+    </div>
+
+  </main>
 
 <script>
+window.addEventListener("load", async () => {
+  await waitForSupabase();
 
-// AUTH
-async function checkAuth(){
-  const { data } = await supabaseClient.auth.getUser();
-  if(!data.user) location.href="login.html";
-}
-checkAuth();
+  const ctx = await getProfile();
+  if (!ctx) { window.location.href = "login.html"; return; }
 
-async function logout(){
-  await supabaseClient.auth.signOut();
-  location.href="login.html";
-}
+  const { user, profile, tenant } = ctx;
 
-// MODULE UI
-function show(m){
-  const a=document.getElementById("moduleArea");
+  document.getElementById("userName").textContent = profile.full_name || user.email;
+  document.getElementById("tenantName").textContent = tenant?.name || "Village Council";
 
-  if(m==="property"){
-    a.innerHTML=`
-      <input placeholder="House Number">
-      <input placeholder="Location">
-      <button class="action" onclick="handleProperty()">Add Property</button>
-    `;
+  const roleLabel = { super_admin: "Super Admin", admin: "Admin", worker: "Field Worker" };
+  document.getElementById("roleBadge").textContent = roleLabel[profile.role] || profile.role || "User";
+
+  const [propRes, familyRes] = await Promise.all([
+    supabaseClient.from("properties").select("id", { count: "exact", head: true }).eq("tenant_id", profile.tenant_id),
+    supabaseClient.from("families").select("id", { count: "exact", head: true })
+  ]);
+  document.getElementById("statProperties").textContent = propRes.count ?? "—";
+  document.getElementById("statHouseholds").textContent = familyRes.count ?? "—";
+
+  const { data: recent } = await supabaseClient
+    .from("properties")
+    .select("id, property_code, building_type, status, created_at")
+    .eq("tenant_id", profile.tenant_id)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  const list = document.getElementById("recentList");
+  if (!recent || recent.length === 0) {
+    list.innerHTML = '<div class="text-sm text-gray-400 py-4 text-center">No surveys yet.</div>';
+    return;
   }
 
-  if(m==="family"){
-    a.innerHTML=`
-      <input placeholder="Head Name">
-      <input placeholder="Property ID">
-      <button class="action" onclick="handleFamily()">Add Family</button>
-    `;
-  }
-
-  if(m==="tax"){
-    a.innerHTML=`
-      <button class="action" onclick="handleTax()">Generate Tax</button>
-    `;
-  }
-}
-
-// HANDLERS
-async function handleProperty(){
-  const i=document.querySelectorAll("#moduleArea input");
-  await addProperty(i[0].value,i[1].value);
-  refreshDashboard();
-}
-
-async function handleFamily(){
-  const i=document.querySelectorAll("#moduleArea input");
-  await addFamily(i[0].value,i[1].value);
-  refreshDashboard();
-}
-
-async function handleTax(){
-  const pid=prompt("Property ID");
-  const fid=prompt("Family ID");
-  const y=prompt("Year");
-  const amt=prompt("Amount");
-  await generateTax(pid,fid,y,amt);
-  refreshDashboard();
-}
-
+  list.innerHTML = recent.map(p => `
+    <a href="survey.html?id=${p.id}" class="flex items-center justify-between bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
+      <div>
+        <div class="text-sm font-semibold text-gray-900">${p.property_code}</div>
+        <div class="text-xs text-gray-500 mt-0.5">${p.building_type || '—'}</div>
+      </div>
+      <span class="text-xs px-2 py-1 rounded-full font-medium ${p.status === 'complete' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+        ${p.status === 'complete' ? 'Complete' : 'Incomplete'}
+      </span>
+    </a>
+  `).join("");
+});
 </script>
-
 </body>
 </html>

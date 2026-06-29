@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Property Survey — enga.in</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .step-content { display: none; }
+    .step-content.active { display: block; }
+    #videoEl { transform: scaleX(1); }
+    .unit-card { animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+<!-- Header -->
+<header class="bg-blue-800 text-white shadow">
+  <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-blue-200 hover:text-white transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <span class="text-sm">Dashboard</span>
+    </a>
+    <h1 class="text-sm font-semibold">Property Survey</h1>
+    <div class="w-16"></div>
+  </div>
+</header>
+
+<!-- Progress Bar -->
+<div class="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+  <div class="max-w-lg mx-auto px-4 py-3">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs text-gray-500">Step <span id="currentStepNum">1</span> of 7</span>
+      <span class="text-xs font-medium text-blue-700" id="stepLabel">Property Number</span>
+    </div>
+    <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div id="progressBar" class="h-full bg-blue-600 rounded-full transition-all duration-300" style="width:14.28%"></div>
+    </div>
+    <div class="flex justify-between mt-2">
+      <div id="stepDots" class="flex gap-1.5">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-lg mx-auto px-4 py-6 pb-32">
+
+  <!-- ===== STEP 1: Property Number ===== -->
+  <div class="step-content active" id="step-1">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Property Number</h2>
+    <p class="text-sm text-gray-500 mb-6">Enter the numeric property number. The system will format it automatically.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Enter Number</label>
+      <div class="flex gap-3 items-start">
+        <div class="flex-1">
+          <input id="rawNumber" type="number" inputmode="numeric" pattern="[0-9]*" min="1"
+            placeholder="e.g. 25"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            oninput="previewPropertyCode()">
+          <p class="text-xs text-gray-400 mt-1.5">Numbers only</p>
+        </div>
+      </div>
+
+      <div id="codePreview" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+        <p class="text-xs text-blue-600 font-medium mb-0.5">Property Code</p>
+        <p class="text-xl font-bold font-mono text-blue-800" id="codePreviewVal"></p>
+      </div>
+
+      <div id="numberValidMsg" class="hidden mt-3 text-sm font-medium"></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: Property Details ===== -->
+  <div class="step-content" id="step-2">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Property Details</h2>
+    <p class="text-sm text-gray-500 mb-6">Record building information.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Building Type <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="cursor-pointer">
+            <input type="radio" name="buildingType" value="RCC" class="sr-only peer" onchange="state.buildingType=this.value">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all hover:border-gray-300">RCC</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="buildingType" value="Assam Type" class="sr-only peer" onchange="state.buildingType=this.value">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all hover:border-gray-300">Assam Type</div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="buildingType" value="Semi RCC" class="sr-only peer" onchange="state.buildingType=this.value">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all hover:border-gray-300">Semi RCC</div>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+        <textarea id="address" rows="2" placeholder="Street / locality / ward"
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          oninput="state.address=this.value"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Landmark</label>
+        <input id="landmark" type="text" placeholder="e.g. Near market, opposite church"
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          oninput="state.landmark=this.value">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Remarks</label>
+        <textarea id="remarks" rows="2" placeholder="Any additional notes"
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          oninput="state.remarks=this.value"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: Ownership ===== -->
+  <div class="step-content" id="step-3">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Property Ownership</h2>
+    <p class="text-sm text-gray-500 mb-6">Enter owner details.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-5">
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Type <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="cursor-pointer" onclick="toggleOwnerFields('Individual')">
+            <input type="radio" name="ownerType" value="Individual" class="sr-only peer" checked>
+            <div class="border-2 border-blue-500 bg-blue-50 rounded-lg px-3 py-2.5 text-center text-sm font-medium text-blue-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all" id="ot-Individual">Individual</div>
+          </label>
+          <label class="cursor-pointer" onclick="toggleOwnerFields('Government')">
+            <input type="radio" name="ownerType" value="Government" class="sr-only peer">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all" id="ot-Government">Government</div>
+          </label>
+          <label class="cursor-pointer" onclick="toggleOwnerFields('NGO')">
+            <input type="radio" name="ownerType" value="NGO" class="sr-only peer">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all" id="ot-NGO">NGO</div>
+          </label>
+          <label class="cursor-pointer" onclick="toggleOwnerFields('Religious')">
+            <input type="radio" name="ownerType" value="Religious" class="sr-only peer">
+            <div class="border-2 border-gray-200 rounded-lg px-3 py-2.5 text-center text-sm font-medium peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all" id="ot-Religious">Religious</div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Individual fields -->
+      <div id="fields-Individual" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+          <input id="ownerName" type="text" placeholder="Owner's full name"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="state.ownerName=this.value">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Mobile</label>
+          <input id="ownerMobile" type="tel" inputmode="numeric" placeholder="10-digit number"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="state.ownerMobile=this.value">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+          <textarea id="ownerAddress" rows="2"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            oninput="state.ownerAddress=this.value"></textarea>
+        </div>
+      </div>
+
+      <!-- Institution fields -->
+      <div id="fields-Institution" class="space-y-4 hidden">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Institution / Organisation Name</label>
+          <input id="institutionName" type="text"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="state.institutionName=this.value">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Contact Person</label>
+          <input id="contactPerson" type="text"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="state.contactPerson=this.value">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Mobile</label>
+          <input id="contactMobile" type="tel" inputmode="numeric"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="state.contactMobile=this.value">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+          <textarea id="institutionAddress" rows="2"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            oninput="state.institutionAddress=this.value"></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: Units ===== -->
+  <div class="step-content" id="step-4">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Units</h2>
+    <p class="text-sm text-gray-500 mb-4">Each property must have at least one unit. Units are numbered automatically.</p>
+
+    <div id="unitsList" class="space-y-2 mb-4"></div>
+
+    <button onclick="openUnitModal(null)"
+      class="w-full flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 rounded-xl py-3.5 text-blue-600 font-medium text-sm hover:bg-blue-50 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Add Unit
+    </button>
+  </div>
+
+  <!-- ===== STEP 5: GPS ===== -->
+  <div class="step-content" id="step-5">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">GPS Location</h2>
+    <p class="text-sm text-gray-500 mb-6">Capture the property's GPS coordinates. Do not type coordinates manually.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+
+      <div id="gpsStatus" class="text-center py-6">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <p class="text-gray-500 text-sm">No GPS captured yet</p>
+      </div>
+
+      <div id="gpsResult" class="hidden">
+        <div class="flex items-center gap-3 mb-4">
+          <div id="accuracyDot" class="w-3 h-3 rounded-full bg-gray-400 flex-shrink-0"></div>
+          <div>
+            <span id="accuracyLabel" class="text-sm font-semibold"></span>
+            <span class="text-xs text-gray-500 ml-1">accuracy</span>
+          </div>
+          <span id="accuracyBadge" class="ml-auto text-xs px-2.5 py-1 rounded-full font-medium"></span>
+        </div>
+
+        <div class="space-y-2 bg-gray-50 rounded-lg p-3">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Latitude</span>
+            <span class="font-mono font-medium text-gray-900" id="gpsLat">—</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Longitude</span>
+            <span class="font-mono font-medium text-gray-900" id="gpsLng">—</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Accuracy</span>
+            <span class="font-mono font-medium text-gray-900" id="gpsAccuracy">—</span>
+          </div>
+        </div>
+
+        <div id="gpsPoorWarning" class="hidden mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+          GPS accuracy is poor. You may still save, but consider retrying in a better location.
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-3">
+        <button onclick="captureGPS()" id="gpsBtn"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          </svg>
+          <span id="gpsBtnLabel">Capture GPS</span>
+        </button>
+        <button onclick="captureGPS()" id="gpsRetryBtn" class="hidden px-4 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          Retry
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== STEP 6: Photo ===== -->
+  <div class="step-content" id="step-6">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Front Photo</h2>
+    <p class="text-sm text-gray-500 mb-4">Mandatory. Camera only — no gallery uploads. GPS must be captured first.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+      <!-- Camera view -->
+      <div id="cameraView" class="hidden">
+        <div class="relative bg-black">
+          <video id="videoEl" autoplay playsinline class="w-full max-h-72 object-cover"></video>
+          <div class="absolute bottom-3 inset-x-0 flex justify-center">
+            <button onclick="capturePhoto()"
+              class="w-16 h-16 bg-white rounded-full border-4 border-blue-500 shadow-lg hover:bg-blue-50 active:scale-95 transition-transform flex items-center justify-center">
+              <div class="w-10 h-10 bg-blue-600 rounded-full"></div>
+            </button>
+          </div>
+        </div>
+        <div class="p-3 text-center text-xs text-gray-500">Tap the button to capture</div>
+      </div>
+
+      <!-- No camera yet -->
+      <div id="cameraStart" class="p-8 text-center">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <p class="text-gray-500 text-sm mb-4">Open camera to take the front photo</p>
+        <button onclick="startCamera()"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+          Open Camera
+        </button>
+      </div>
+
+      <!-- Photo captured -->
+      <div id="photoPreview" class="hidden">
+        <div class="relative">
+          <img id="photoImg" class="w-full max-h-72 object-cover" alt="Captured photo">
+          <div class="absolute top-2 right-2">
+            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">✓ Captured</span>
+          </div>
+        </div>
+        <div class="p-4 flex gap-3">
+          <button onclick="retakePhoto()"
+            class="flex-1 border border-gray-200 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+            Retake
+          </button>
+          <div class="flex-1 bg-green-50 rounded-lg py-2.5 text-center">
+            <span class="text-green-700 font-medium text-sm">Photo saved</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="photoError" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"></div>
+  </div>
+
+  <!-- ===== STEP 7: Review & Submit ===== -->
+  <div class="step-content" id="step-7">
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Review & Submit</h2>
+    <p class="text-sm text-gray-500 mb-6">Check all details before saving.</p>
+
+    <div class="space-y-3" id="reviewContent"></div>
+
+    <div id="submitError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"></div>
+    <div id="submitSuccess" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
+      <div class="text-2xl mb-1">✓</div>
+      <div class="font-semibold text-green-800">Property Saved</div>
+      <div class="text-sm text-green-600 mt-0.5" id="submitSuccessCode"></div>
+      <a href="index.html" class="mt-3 inline-block text-sm text-green-700 underline">Back to Dashboard</a>
+    </div>
+  </div>
+
+</main>
+
+<!-- Navigation Buttons (fixed bottom) -->
+<div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 shadow-lg z-20">
+  <div class="max-w-lg mx-auto px-4 py-3 flex gap-3">
+    <button id="prevBtn" onclick="prevStep()"
+      class="flex-1 border border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors hidden">
+      ← Back
+    </button>
+    <button id="nextBtn" onclick="nextStep()"
+      class="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 rounded-xl transition-colors">
+      Next →
+    </button>
+    <button id="submitBtn" onclick="submitSurvey()"
+      class="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-3 rounded-xl transition-colors hidden">
+      Save Property
+    </button>
+  </div>
+</div>
+
+<!-- Unit Modal -->
+<div id="unitModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end sm:items-center justify-center p-4">
+  <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+    <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-900" id="unitModalTitle">Add Unit</h3>
+      <button onclick="closeUnitModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Unit Type <span class="text-red-500">*</span></label>
+        <select id="unitType"
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="">Select type…</option>
+          <option value="Residential">Residential</option>
+          <option value="Commercial">Commercial</option>
+          <option value="Institution / Public">Institution / Public</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Description <span class="text-gray-400 font-normal">(optional)</span></label>
+        <input id="unitDescription" type="text" placeholder="e.g. Ground Floor, Roadside Shop"
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+    <div class="p-5 pt-0 flex gap-3">
+      <button onclick="closeUnitModal()" class="flex-1 border border-gray-200 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+        Cancel
+      </button>
+      <button onclick="saveUnit()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm">
+        Save Unit
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────
+const state = {
+  step: 1,
+  rawNumber: '',
+  propertyCode: '',
+  buildingType: '',
+  address: '',
+  landmark: '',
+  remarks: '',
+  ownerType: 'Individual',
+  ownerName: '',
+  ownerMobile: '',
+  ownerAddress: '',
+  institutionName: '',
+  contactPerson: '',
+  contactMobile: '',
+  institutionAddress: '',
+  units: [],
+  gps: null,
+  photoBlob: null,
+  photoDataUrl: null,
+  // From profile
+  tenantId: null,
+  tenantPrefix: 'VC',
+  tenantDigitLength: 4,
+  workerId: null,
+  villageName: '',
+  numberRange: null,
+  editingUnitIndex: null
+};
+
+const STEP_LABELS = ['Property Number', 'Property Details', 'Ownership', 'Units', 'GPS', 'Photo', 'Review'];
+
+// ─── Init ─────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  await waitForSupabase();
+
+  const user = await requireAuth();
+  if (!user) return;
+
+  const ctx = await getProfile();
+  if (!ctx) { window.location.href = 'login.html'; return; }
+
+  const { profile, tenant } = ctx;
+  state.tenantId = profile.tenant_id;
+  state.workerId = user.id;
+  state.villageName = tenant?.name || 'Village Council';
+
+  if (tenant) {
+    state.tenantPrefix = tenant.property_prefix || 'VC';
+    state.tenantDigitLength = tenant.id_digit_length || 4;
+  }
+
+  // Load number range for this worker
+  if (state.tenantId) {
+    state.numberRange = await getWorkerNumberRange(state.tenantId, state.workerId);
+  }
+
+  renderStep();
+  renderStepDots();
+});
+
+// ─── Navigation ───────────────────────────────────────────────────────
+function renderStep() {
+  document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+  document.getElementById(`step-${state.step}`).classList.add('active');
+
+  document.getElementById('currentStepNum').textContent = state.step;
+  document.getElementById('stepLabel').textContent = STEP_LABELS[state.step - 1];
+  document.getElementById('progressBar').style.width = `${(state.step / 7) * 100}%`;
+
+  document.getElementById('prevBtn').classList.toggle('hidden', state.step === 1);
+  document.getElementById('nextBtn').classList.toggle('hidden', state.step === 7);
+  document.getElementById('submitBtn').classList.toggle('hidden', state.step !== 7);
+
+  renderStepDots();
+
+  if (state.step === 7) buildReview();
+  if (state.step === 4) renderUnits();
+}
+
+function renderStepDots() {
+  const container = document.getElementById('stepDots');
+  container.innerHTML = Array.from({ length: 7 }, (_, i) => {
+    const n = i + 1;
+    const cls = n < state.step ? 'bg-blue-600' : n === state.step ? 'bg-blue-400' : 'bg-gray-200';
+    return `<div class="w-2 h-2 rounded-full ${cls} transition-all"></div>`;
+  }).join('');
+}
+
+async function nextStep() {
+  const valid = await validateStep(state.step);
+  if (!valid) return;
+
+  if (state.step < 7) {
+    state.step++;
+    renderStep();
+    window.scrollTo(0, 0);
+  }
+}
+
+function prevStep() {
+  if (state.step > 1) {
+    // Stop camera if going back from photo step
+    if (state.step === 6) stopCamera();
+    state.step--;
+    renderStep();
+    window.scrollTo(0, 0);
+  }
+}
+
+// ─── Validation ───────────────────────────────────────────────────────
+async function validateStep(step) {
+  if (step === 1) {
+    const num = parseInt(document.getElementById('rawNumber').value);
+    if (!num || num < 1) {
+      showToast('Enter a valid property number.', 'error');
+      return false;
+    }
+    const code = formatPropertyCode(num, state.tenantPrefix, state.tenantDigitLength);
+
+    // Range validation
+    if (state.numberRange) {
+      if (num < state.numberRange.range_start || num > state.numberRange.range_end) {
+        showToast(`Number must be between ${state.numberRange.range_start} and ${state.numberRange.range_end}.`, 'error');
+        return false;
+      }
+    }
+
+    // Duplicate check
+    const setMsg = (msg, isError) => {
+      const el = document.getElementById('numberValidMsg');
+      el.textContent = msg;
+      el.className = `mt-3 text-sm font-medium ${isError ? 'text-red-600' : 'text-green-600'}`;
+      el.classList.remove('hidden');
+    };
+
+    const exists = await checkPropertyCodeExists(code);
+    if (exists) {
+      setMsg(`${code} is already registered.`, true);
+      return false;
+    }
+
+    state.rawNumber = num;
+    state.propertyCode = code;
+    setMsg(`${code} is available.`, false);
+    return true;
+  }
+
+  if (step === 2) {
+    if (!state.buildingType) {
+      showToast('Select a building type.', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  if (step === 3) {
+    if (state.ownerType === 'Individual' && !state.ownerName.trim()) {
+      showToast('Enter owner full name.', 'error');
+      return false;
+    }
+    if (state.ownerType !== 'Individual' && !state.institutionName.trim()) {
+      showToast('Enter institution / organisation name.', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  if (step === 4) {
+    if (state.units.length === 0) {
+      showToast('Add at least one unit.', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  return true;
+}
+
+// ─── Step 1: Property Number ──────────────────────────────────────────
+function previewPropertyCode() {
+  const val = parseInt(document.getElementById('rawNumber').value);
+  const preview = document.getElementById('codePreview');
+  const previewVal = document.getElementById('codePreviewVal');
+  const msgEl = document.getElementById('numberValidMsg');
+  msgEl.classList.add('hidden');
+
+  if (val && val > 0) {
+    previewVal.textContent = formatPropertyCode(val, state.tenantPrefix, state.tenantDigitLength);
+    preview.classList.remove('hidden');
+  } else {
+    preview.classList.add('hidden');
+  }
+}
+
+// ─── Step 3: Owner Type Toggle ────────────────────────────────────────
+function toggleOwnerFields(type) {
+  state.ownerType = type;
+  const types = ['Individual', 'Government', 'NGO', 'Religious'];
+  types.forEach(t => {
+    const el = document.getElementById(`ot-${t}`);
+    if (el) {
+      el.className = `border-2 rounded-lg px-3 py-2.5 text-center text-sm font-medium transition-all ${
+        t === type ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700'
+      }`;
+    }
+  });
+
+  const isIndividual = type === 'Individual';
+  document.getElementById('fields-Individual').classList.toggle('hidden', !isIndividual);
+  document.getElementById('fields-Institution').classList.toggle('hidden', isIndividual);
+}
+
+// ─── Step 4: Units ────────────────────────────────────────────────────
+function renderUnits() {
+  const list = document.getElementById('unitsList');
+  if (state.units.length === 0) {
+    list.innerHTML = '<div class="text-sm text-gray-400 text-center py-3">No units added yet.</div>';
+    return;
+  }
+  list.innerHTML = state.units.map((u, i) => `
+    <div class="unit-card bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start gap-3">
+      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <span class="text-blue-700 text-xs font-bold">${i + 1}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold text-gray-900">Unit ${i + 1}</div>
+        <div class="text-xs text-blue-600 mt-0.5">${u.type}</div>
+        ${u.description ? `<div class="text-xs text-gray-500 mt-0.5">${u.description}</div>` : ''}
+      </div>
+      <div class="flex gap-1">
+        <button onclick="openUnitModal(${i})" class="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </button>
+        <button onclick="deleteUnit(${i})" class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openUnitModal(index) {
+  state.editingUnitIndex = index;
+  const modal = document.getElementById('unitModal');
+  const title = document.getElementById('unitModalTitle');
+  const typeEl = document.getElementById('unitType');
+  const descEl = document.getElementById('unitDescription');
+
+  if (index !== null && state.units[index]) {
+    title.textContent = `Edit Unit ${index + 1}`;
+    typeEl.value = state.units[index].type;
+    descEl.value = state.units[index].description || '';
+  } else {
+    title.textContent = 'Add Unit';
+    typeEl.value = '';
+    descEl.value = '';
+  }
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeUnitModal() {
+  document.getElementById('unitModal').classList.add('hidden');
+  document.getElementById('unitModal').classList.remove('flex');
+  state.editingUnitIndex = null;
+}
+
+function saveUnit() {
+  const type = document.getElementById('unitType').value;
+  const desc = document.getElementById('unitDescription').value.trim();
+
+  if (!type) { showToast('Select a unit type.', 'error'); return; }
+
+  if (state.editingUnitIndex !== null) {
+    state.units[state.editingUnitIndex] = { type, description: desc };
+  } else {
+    state.units.push({ type, description: desc });
+  }
+
+  closeUnitModal();
+  renderUnits();
+}
+
+function deleteUnit(index) {
+  state.units.splice(index, 1);
+  renderUnits();
+}
+
+// ─── Step 5: GPS ──────────────────────────────────────────────────────
+function captureGPS() {
+  const btn = document.getElementById('gpsBtn');
+  const label = document.getElementById('gpsBtnLabel');
+  label.textContent = 'Capturing…';
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    showToast('GPS not supported on this device.', 'error');
+    btn.disabled = false;
+    label.textContent = 'Capture GPS';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      state.gps = { lat: latitude, lng: longitude, accuracy };
+
+      document.getElementById('gpsStatus').classList.add('hidden');
+      document.getElementById('gpsResult').classList.remove('hidden');
+      document.getElementById('gpsLat').textContent = latitude.toFixed(6);
+      document.getElementById('gpsLng').textContent = longitude.toFixed(6);
+      document.getElementById('gpsAccuracy').textContent = `±${accuracy.toFixed(1)} m`;
+
+      const info = accuracyInfo(accuracy);
+      document.getElementById('accuracyDot').className = `w-3 h-3 rounded-full flex-shrink-0 ${info.dotClass}`;
+      document.getElementById('accuracyLabel').textContent = info.label;
+      document.getElementById('accuracyBadge').textContent = `±${accuracy.toFixed(0)}m`;
+      document.getElementById('accuracyBadge').className = `ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${info.badgeClass}`;
+
+      const poorWarn = document.getElementById('gpsPoorWarning');
+      if (accuracy > 30) poorWarn.classList.remove('hidden');
+      else poorWarn.classList.add('hidden');
+
+      btn.textContent = 'Recapture GPS';
+      btn.disabled = false;
+      document.getElementById('gpsBtnLabel').textContent = 'Recapture GPS';
+    },
+    (err) => {
+      showToast('GPS failed: ' + err.message, 'error');
+      btn.disabled = false;
+      label.textContent = 'Capture GPS';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function accuracyInfo(acc) {
+  if (acc <= 10) return { label: 'Excellent', dotClass: 'bg-green-500', badgeClass: 'bg-green-100 text-green-700' };
+  if (acc <= 30) return { label: 'Fair', dotClass: 'bg-yellow-400', badgeClass: 'bg-yellow-100 text-yellow-700' };
+  return { label: 'Poor', dotClass: 'bg-red-500', badgeClass: 'bg-red-100 text-red-700' };
+}
+
+// ─── Step 6: Camera / Photo ───────────────────────────────────────────
+let cameraStream = null;
+
+async function startCamera() {
+  const errEl = document.getElementById('photoError');
+  errEl.classList.add('hidden');
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('videoEl').srcObject = cameraStream;
+    document.getElementById('cameraStart').classList.add('hidden');
+    document.getElementById('cameraView').classList.remove('hidden');
+  } catch (err) {
+    errEl.textContent = 'Camera access denied or not available: ' + err.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('cameraView').classList.add('hidden');
+  if (!state.photoBlob) document.getElementById('cameraStart').classList.remove('hidden');
+}
+
+function capturePhoto() {
+  const video = document.getElementById('videoEl');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Burn-in overlay
+  burnOverlay(ctx, canvas.width, canvas.height);
+
+  state.photoDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+  canvas.toBlob((blob) => {
+    state.photoBlob = blob;
+  }, 'image/jpeg', 0.88);
+
+  stopCamera();
+  document.getElementById('photoImg').src = state.photoDataUrl;
+  document.getElementById('photoPreview').classList.remove('hidden');
+  document.getElementById('cameraStart').classList.add('hidden');
+}
+
+function burnOverlay(ctx, w, h) {
+  const fontSize = Math.max(14, Math.floor(h * 0.025));
+  const lines = [
+    state.villageName,
+    `Property: ${state.propertyCode || 'N/A'}`,
+    state.gps ? `GPS: ${state.gps.lat.toFixed(5)}, ${state.gps.lng.toFixed(5)}` : 'GPS: Not captured',
+    new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  ];
+
+  const padding = 10;
+  const lineH = fontSize * 1.5;
+  const overlayH = lineH * lines.length + padding * 2;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, h - overlayH, w, overlayH);
+
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  ctx.fillStyle = '#ffffff';
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, padding, h - overlayH + padding + (i + 1) * lineH - 4);
+  });
+
+  ctx.restore();
+}
+
+function retakePhoto() {
+  state.photoBlob = null;
+  state.photoDataUrl = null;
+  document.getElementById('photoPreview').classList.add('hidden');
+  document.getElementById('cameraStart').classList.remove('hidden');
+}
+
+// ─── Step 7: Review ───────────────────────────────────────────────────
+function buildReview() {
+  const ownerInfo = state.ownerType === 'Individual'
+    ? [
+        { label: 'Name', val: state.ownerName || '—' },
+        { label: 'Mobile', val: state.ownerMobile || '—' },
+        { label: 'Address', val: state.ownerAddress || '—' }
+      ]
+    : [
+        { label: 'Institution', val: state.institutionName || '—' },
+        { label: 'Contact Person', val: state.contactPerson || '—' },
+        { label: 'Mobile', val: state.contactMobile || '—' },
+        { label: 'Address', val: state.institutionAddress || '—' }
+      ];
+
+  const missing = [];
+  if (!state.propertyCode) missing.push('Property Number');
+  if (!state.gps) missing.push('GPS');
+  if (!state.photoBlob) missing.push('Front Photo');
+
+  const sections = [
+    {
+      title: 'Property',
+      icon: '🏠',
+      rows: [
+        { label: 'Code', val: state.propertyCode || '—' },
+        { label: 'Building Type', val: state.buildingType || '—' },
+        { label: 'Address', val: state.address || '—' },
+        { label: 'Landmark', val: state.landmark || '—' },
+        { label: 'Remarks', val: state.remarks || '—' }
+      ]
+    },
+    {
+      title: 'Ownership',
+      icon: '👤',
+      rows: [{ label: 'Type', val: state.ownerType }, ...ownerInfo]
+    },
+    {
+      title: 'Units',
+      icon: '🏢',
+      rows: state.units.length > 0
+        ? state.units.map((u, i) => ({ label: `Unit ${i + 1}`, val: u.type + (u.description ? ` — ${u.description}` : '') }))
+        : [{ label: '', val: 'No units added' }]
+    },
+    {
+      title: 'GPS',
+      icon: '📍',
+      rows: state.gps
+        ? [
+            { label: 'Latitude', val: state.gps.lat.toFixed(6) },
+            { label: 'Longitude', val: state.gps.lng.toFixed(6) },
+            { label: 'Accuracy', val: `±${state.gps.accuracy.toFixed(1)} m` }
+          ]
+        : [{ label: '', val: '⚠ Not captured' }]
+    },
+    {
+      title: 'Photo',
+      icon: '📷',
+      rows: [{ label: 'Front Photo', val: state.photoBlob ? '✓ Captured' : '⚠ Not captured' }]
+    }
+  ];
+
+  const missingBanner = missing.length > 0
+    ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3">
+        <p class="text-sm font-semibold text-amber-800 mb-1">⚠ Missing required fields</p>
+        <p class="text-xs text-amber-700">The following are required to mark as complete: <strong>${missing.join(', ')}</strong></p>
+        <p class="text-xs text-amber-600 mt-1">Property will be saved as <strong>Incomplete</strong>.</p>
+       </div>`
+    : `<div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-3 text-sm text-green-700 font-medium">✓ All required fields captured. Will be saved as Complete.</div>`;
+
+  document.getElementById('reviewContent').innerHTML = missingBanner + sections.map(s => `
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <span>${s.icon}</span>
+        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">${s.title}</span>
+      </div>
+      <div class="divide-y divide-gray-50">
+        ${s.rows.map(r => `
+          <div class="px-4 py-2.5 flex justify-between items-start gap-4">
+            <span class="text-xs text-gray-500 flex-shrink-0 mt-0.5">${r.label}</span>
+            <span class="text-sm text-gray-900 text-right">${r.val}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Submit ───────────────────────────────────────────────────────────
+async function submitSurvey() {
+  const btn = document.getElementById('submitBtn');
+  const errEl = document.getElementById('submitError');
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const isComplete = !!(state.propertyCode && state.gps && state.photoBlob);
+    const status = isComplete ? 'complete' : 'incomplete';
+
+    // Derive property_use from units
+    const unitTypes = [...new Set(state.units.map(u => u.type))];
+    let propertyUse = 'Mixed';
+    if (unitTypes.length === 1) propertyUse = unitTypes[0];
+
+    // 1. Insert property
+    const propertyData = {
+      property_code: state.propertyCode,
+      building_type: state.buildingType || null,
+      property_use: propertyUse,
+      address: state.address || null,
+      landmark: state.landmark || null,
+      remarks: state.remarks || null,
+      owner_type: state.ownerType,
+      status,
+      tenant_id: state.tenantId,
+      worker_id: state.workerId,
+      is_incomplete: !isComplete,
+      latitude: state.gps?.lat ?? null,
+      longitude: state.gps?.lng ?? null,
+      gps_accuracy: state.gps?.accuracy ?? null
+    };
+
+    if (state.ownerType === 'Individual') {
+      propertyData.owner_name = state.ownerName || null;
+      propertyData.contact_number = state.ownerMobile || null;
+    } else {
+      propertyData.organization_name = state.institutionName || null;
+      propertyData.contact_person = state.contactPerson || null;
+      propertyData.contact_number = state.contactMobile || null;
+    }
+
+    const { data: property, error: propErr } = await supabaseClient
+      .from('properties')
+      .insert(propertyData)
+      .select('id')
+      .single();
+
+    if (propErr) throw new Error('Property save failed: ' + propErr.message);
+
+    const propertyId = property.id;
+
+    // 2. Insert owner record + property_owners link
+    let ownerInsertData;
+    if (state.ownerType === 'Individual') {
+      ownerInsertData = {
+        full_name: state.ownerName || 'Unknown',
+        mobile: state.ownerMobile || null,
+        address: state.ownerAddress || null,
+        village_council_id: null,
+        tenant_id: state.tenantId
+      };
+    } else {
+      ownerInsertData = {
+        full_name: state.institutionName || 'Unknown',
+        mobile: state.contactMobile || null,
+        address: state.institutionAddress || null,
+        village_council_id: null,
+        tenant_id: state.tenantId
+      };
+    }
+
+    const { data: owner } = await supabaseClient
+      .from('owners')
+      .insert(ownerInsertData)
+      .select('id')
+      .single();
+
+    if (owner) {
+      await supabaseClient.from('property_owners').insert({
+        property_id: propertyId,
+        owner_id: owner.id,
+        is_primary: true,
+        ownership_percent: 100
+      });
+    }
+
+    // 3. Insert units
+    if (state.units.length > 0) {
+      await supabaseClient.from('units').insert(
+        state.units.map((u, i) => ({
+          property_id: propertyId,
+          unit_no: i + 1,
+          use_type: u.type,
+          description: u.description || null,
+          tenant_id: state.tenantId,
+          status: 'active'
+        }))
+      );
+    }
+
+    // 4. Upload photo
+    if (state.photoBlob) {
+      const fileName = `${state.tenantId}/${propertyId}/${Date.now()}_front.jpg`;
+      const { data: uploadData, error: uploadErr } = await supabaseClient.storage
+        .from('property-photos')
+        .upload(fileName, state.photoBlob, { contentType: 'image/jpeg', upsert: false });
+
+      if (!uploadErr && uploadData) {
+        await supabaseClient.from('property_photos').insert({
+          property_id: propertyId,
+          photo_type: 'front',
+          file_path: uploadData.path,
+          uploaded_by: state.workerId,
+          tenant_id: state.tenantId
+        });
+      }
+    }
+
+    // Success
+    document.getElementById('submitSuccess').classList.remove('hidden');
+    document.getElementById('submitSuccessCode').textContent = `${state.propertyCode} — ${status === 'complete' ? 'Complete' : 'Saved as Incomplete'}`;
+    document.getElementById('submitBtn').classList.add('hidden');
+    document.getElementById('prevBtn').classList.add('hidden');
+
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save Property';
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  let toast = document.getElementById('toastEl');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toastEl';
+    toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-all';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg max-w-xs text-center ${
+    type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-white'
+  }`;
+  toast.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
