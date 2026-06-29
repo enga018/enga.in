@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>ENGA Platform Login</title>
 
-  <!-- Supabase JS (MUST load first) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
 
   <style>
     body {
@@ -62,12 +62,6 @@
 <script>
 console.log("Login page loaded");
 
-// IMPORTANT: replace these
-const supabase = window.supabase.createClient(
-  "https://ebfasxnaabcutcrpwpxp.supabase.co",
-  "sb_publishable_-vezxvTfAsS1e2xilOq5Bw_aPqsomZr"
-);
-
 async function login() {
   console.log("LOGIN CLICKED");
 
@@ -83,13 +77,10 @@ async function login() {
   msg.innerText = "Logging in...";
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password
     });
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
 
     if (error) {
       msg.innerText = "Login failed: " + error.message;
@@ -104,11 +95,10 @@ async function login() {
     msg.innerText = "Login successful";
 
     setTimeout(() => {
-      window.location.href = "/admin.html";
+      window.location.href = "admin.html";
     }, 500);
 
   } catch (e) {
-    console.error("CRASH:", e);
     msg.innerText = "System error: " + e.message;
   }
 }
