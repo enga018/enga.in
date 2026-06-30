@@ -49,6 +49,7 @@ function initSupabase() {
         persistSession: true,
         detectSessionInUrl: false,
         storage: cookieStorage,
+        storageKey: AUTH_COOKIE_NAME,
       },
     });
     window.supabaseClient = supabaseClient;

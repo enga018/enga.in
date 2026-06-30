@@ -45,22 +45,10 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6">
-      <!-- Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 mb-8">
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div class="text-2xl font-bold text-gray-900" id="sa_statTenants">—</div>
-          <div class="text-xs text-gray-500 mt-1">Village Councils</div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div class="text-2xl font-bold text-gray-900" id="sa_statModules">—</div>
-          <div class="text-xs text-gray-500 mt-1">Modules</div>
-        </div>
-      </div>
-
       <!-- Tenants List -->
       <div class="mt-8">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Village Councils</h2>
+          <h2 id="sa_tenantHeader" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Village Councils</h2>
           <button onclick="openVcModal()"
             class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
             + Add VC
@@ -73,7 +61,7 @@
 
       <div class="mt-8">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Module Assignments</h2>
+          <h2 id="sa_moduleHeader" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Modules</h2>
           <button onclick="openModuleAccessModal()"
             class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
             Assign Access
@@ -506,6 +494,11 @@ window.addEventListener('load', async () => {
   if (subCtx.type === 'tenant') {
     const ok = await assertTenantMatch(_profile);
     if (!ok) return;
+
+    if (role === 'super_admin' && !_tenant) {
+      _tenant = window.tenantContext.tenant || await resolveTenant();
+      ctx.tenant = _tenant;
+    }
   }
 
   // Route
@@ -513,7 +506,7 @@ window.addEventListener('load', async () => {
     await loadSuperAdmin(ctx);
   } else if (role === 'super_admin' && subCtx.type === 'tenant') {
     // Super admin visiting a tenant subdomain — show admin dashboard with full access
-    await loadAdmin(ctx);
+    await loadAdmin({ profile: _profile, tenant: _tenant || ctx.tenant });
   } else if (role === 'admin' && subCtx.type === 'tenant') {
     await loadAdmin(ctx);
   } else if (role === 'worker' && subCtx.type === 'tenant') {
@@ -532,13 +525,10 @@ async function loadSuperAdmin({ profile }) {
   document.getElementById('sa_userName').textContent = profile?.full_name || 'Super Admin';
   show('superAdminSection');
 
-  const [tenantRes, userRes, moduleRes] = await Promise.all([
+  const [tenantRes] = await Promise.all([
     supabaseClient.from('tenants').select('id', { count: 'exact', head: true }),
-    supabaseClient.from('profiles').select('id', { count: 'exact', head: true }),
-    supabaseClient.from('tenant_module_assignments').select('app_code', { count: 'exact', head: true }),
   ]);
   document.getElementById('sa_statTenants').textContent     = tenantRes.count ?? '—';
-  document.getElementById('sa_statModules').textContent     = moduleRes.count ?? '—';
 
   const [tenantListRes, adminProfilesRes, assignmentRes] = await Promise.all([
     supabaseClient.from('tenants').select('id, name, subdomain, property_prefix').order('name'),
@@ -572,6 +562,9 @@ async function loadSuperAdmin({ profile }) {
     admin_email: (adminProfilesRes.data || []).find(p => p.tenant_id === t.id)?.email || '—',
     modules: tenantModulesMap[t.id] || [],
   }));
+
+  document.getElementById('sa_tenantHeader').textContent = `Village Councils (${tenants.length})`;
+  document.getElementById('sa_moduleHeader').textContent = `Modules (${ALL_MODULE_CODES.length})`;
 
   const list = document.getElementById('sa_tenantList');
   if (!tenants?.length) {
