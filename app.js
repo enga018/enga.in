@@ -5,15 +5,54 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let supabaseClient = null;
 
+const AUTH_COOKIE_NAME = 'sb:auth.token';
+const AUTH_COOKIE_DOMAIN = window.location.hostname.endsWith('enga.in') ? '.enga.in' : undefined;
+
+function getCookie(name) {
+  const cookie = document.cookie.split('; ').find(c => c.startsWith(name + '='));
+  return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+}
+
+function setCookie(name, value) {
+  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+  const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Max-Age=31536000${domainPart}${secureFlag}`;
+}
+
+function deleteCookie(name) {
+  const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT${domainPart}; SameSite=Lax`;
+}
+
+const cookieStorage = {
+  getItem(key) {
+    return getCookie(key);
+  },
+  setItem(key, value) {
+    setCookie(key, value);
+    return true;
+  },
+  removeItem(key) {
+    deleteCookie(key);
+    return true;
+  },
+};
+
 function initSupabase() {
   try {
     if (!window.supabase) {
       console.error("Supabase CDN not loaded");
       return;
     }
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: false,
+        storage: cookieStorage,
+      },
+    });
     window.supabaseClient = supabaseClient;
-    console.log("Supabase initialized");
+    console.log("Supabase initialized with cross-subdomain auth storage");
   } catch (err) {
     console.error("Supabase init failed:", err);
   }
