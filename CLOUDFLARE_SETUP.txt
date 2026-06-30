@@ -98,32 +98,66 @@ newserchhipnorth.enga.in).
 4. Replace ALL the default code with this:
 
 ----------------------------------------------------
+/**
+ * enga.in Cloudflare Worker v1.0
+ *
+ * Purpose:
+ *  - Serve the GitHub Pages frontend from any *.enga.in hostname
+ *  - Preserve the original hostname for tenant detection
+ *  - Support all routes and assets
+ */
+
+const CONFIG = {
+  ORIGIN: "https://enga018.github.io",
+  BASE_PATH: "/enga.in",
+};
+
 export default {
   async fetch(request) {
-    const url = new URL(request.url);
+    const incomingUrl = new URL(request.url);
 
-    // Keep the original subdomain for our JS to read
-    // but tell GitHub Pages it's enga.in
-    const newUrl = new URL(request.url);
-    newUrl.hostname = 'enga018.github.io';
+    // Build the GitHub Pages URL
+    const targetUrl = new URL(CONFIG.ORIGIN);
 
-    const newRequest = new Request(newUrl.toString(), {
+    // Preserve the requested path
+    let path = incomingUrl.pathname;
+
+    // Remove duplicate slashes
+    path = path.replace(/\/+/g, "/");
+
+    // Prefix with the GitHub Pages project path
+    targetUrl.pathname = CONFIG.BASE_PATH + path;
+
+    // Preserve query string
+    targetUrl.search = incomingUrl.search;
+
+    // Fetch from GitHub Pages
+    const response = await fetch(targetUrl.toString(), {
       method: request.method,
       headers: request.headers,
-      body: request.body,
-      redirect: 'follow',
+      body:
+        request.method === "GET" || request.method === "HEAD"
+          ? undefined
+          : request.body,
+      redirect: "follow",
     });
 
-    const response = await fetch(newRequest);
+    // Copy response headers
+    const headers = new Headers(response.headers);
 
-    // Pass response back unchanged
+    // Helpful debugging header
+    headers.set("X-Served-By", "enga.in-worker-v1");
+
+    // Preserve original hostname for debugging
+    headers.set("X-Tenant-Host", incomingUrl.hostname);
+
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers,
+      headers,
     });
-  }
-}
+  },
+};
 ----------------------------------------------------
 
 5. Click "Deploy"
