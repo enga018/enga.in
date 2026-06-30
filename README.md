@@ -11,11 +11,20 @@ This repository hosts the frontend website for:
 
 ---
 
-## 🌐 Live Site
+## Project Docs
+
+- [Goal](docs/goal.md)
+- [Architecture](docs/architecture.md)
+- [Project Memory](docs/project-memory.md)
+
+---
+
+## Live Site
+
 Once GitHub Pages is enabled:
 
 https://enga018.github.io/enga.in/
 
 ---
 
-## 🧱 Project Structure
+## Project Structure
