@@ -13,8 +13,24 @@
 window.addEventListener('load', async () => {
   await waitForSupabase();
   const { data } = await supabaseClient.auth.getSession();
-  if (data.session) {
+  if (!data.session) {
+    window.location.replace('login.html');
+    return;
+  }
+
+  const profileCtx = await getProfile();
+  if (!profileCtx) {
+    window.location.replace('login.html');
+    return;
+  }
+
+  const role = profileCtx.profile?.role;
+  const tenant = profileCtx.tenant;
+
+  if (role === 'super_admin') {
     window.location.replace('dashboard.html');
+  } else if (tenant?.subdomain) {
+    window.location.replace(`https://${tenant.subdomain}.enga.in/dashboard.html`);
   } else {
     window.location.replace('login.html');
   }
