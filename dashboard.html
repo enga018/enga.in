@@ -506,7 +506,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Admin Password</label>
           <input id="vc_password" type="password" placeholder="••••••••"
             class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <p class="text-xs text-gray-400 mt-1">Admin can change this after signing in</p>
+          <p class="text-xs text-gray-400 mt-1">Leave blank to keep current password (edit mode)</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Property Prefix</label>
@@ -594,15 +594,15 @@ window.addEventListener('load', async () => {
   // Route
   if (role === 'super_admin' && (subCtx.type === 'root' || subCtx.type === 'super-admin')) {
     await loadSuperAdmin(ctx);
+  } else if (role === 'super_admin' && subCtx.type === 'tenant') {
+    // Super admin visiting a tenant subdomain — show admin dashboard with full access
+    await loadAdmin(ctx);
   } else if (role === 'admin' && subCtx.type === 'tenant') {
     await loadAdmin(ctx);
   } else if (role === 'worker' && subCtx.type === 'tenant') {
     await loadWorker(ctx);
   } else if (role === 'supervisor' && subCtx.type === 'tenant') {
     await loadSupervisor(ctx);
-  } else if (role === 'super_admin' && subCtx.type === 'tenant') {
-    // Super admin visiting a tenant subdomain — show worker-like view with admin badge
-    await loadAdmin(ctx);
   } else {
     show('deniedSection');
   }
@@ -1204,6 +1204,49 @@ async function openVcModal(vcId = null) {
   const passwordGroup = document.getElementById('vc_passwordGroup');
   const title = document.getElementById('vcModalTitle');
 
+  if (vcId) {
+    title.textContent = 'Edit Village Council';
+    passwordGroup.classList.remove('hidden');
+
+    // Load admin profile for this tenant
+    const { data: adminProfile } = await supabaseClient
+      .from('profiles')
+      .select('email')
+      .eq('tenant_id', vcId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminProfile) {
+      document.getElementById('vc_email').value = adminProfile.email || '';
+    }
+
+    const { data: vc } = await supabaseClient
+      .from('tenants')
+      .select('*')
+      .eq('id', vcId)
+      .single();
+
+    if (vc) {
+      document.getElementById('vc_name').value = vc.name || '';
+      document.getElementById('vc_subdomain').value = vc.subdomain || '';
+      document.getElementById('vc_prefix').value = vc.property_prefix || '';
+
+      // Load assigned modules
+      const { data: assignments } = await supabaseClient
+        .from('tenant_module_assignments')
+        .select('app_code')
+        .eq('tenant_id', vcId);
+
+      _vcModuleCodes = (assignments || []).map(a => a.app_code);
+      document.querySelectorAll('#vc_modules input[type="checkbox"]').forEach(cb => {
+        cb.checked = _vcModuleCodes.includes(cb.value);
+      });
+    }
+  } else {
+    title.textContent = 'Add Village Council';
+    passwordGroup.classList.remove('hidden');
+  }
+
   // Populate module checkboxes
   const modsEl = document.getElementById('vc_modules');
   modsEl.innerHTML = ALL_MODULE_CODES.map(code => `
@@ -1270,12 +1313,13 @@ async function saveVc() {
 
   if (!name) { msgEl.textContent = 'Enter VC name.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
   if (!subdomain) { msgEl.textContent = 'Enter subdomain.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
-  if (!vcId && !email) { msgEl.textContent = 'Enter admin email.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
+  if (!email) { msgEl.textContent = 'Enter admin email.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
   if (!vcId && !password) { msgEl.textContent = 'Enter admin password.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
   if (!prefix) { msgEl.textContent = 'Enter property prefix.'; msgEl.className = 'text-xs text-red-500 min-h-4'; return; }
 
   if (vcId) {
-    const { error } = await supabaseClient
+    // Update tenant
+    const { error: tenantError } = await supabaseClient
       .from('tenants')
       .update({
         name,
@@ -1284,10 +1328,28 @@ async function saveVc() {
       })
       .eq('id', vcId);
 
-    if (error) {
-      msgEl.textContent = error.message;
+    if (tenantError) {
+      msgEl.textContent = tenantError.message;
       msgEl.className = 'text-xs text-red-500 min-h-4';
       return;
+    }
+
+    // Update admin profile email
+    const { data: adminProfile } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('tenant_id', vcId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminProfile) {
+      await supabaseClient
+        .from('profiles')
+        .update({ email })
+        .eq('id', adminProfile.id);
+
+      // Password update requires admin privileges - skip for now
+      // Admin can change their own password from their portal
     }
 
     // Update module assignments
