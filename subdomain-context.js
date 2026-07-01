@@ -68,10 +68,12 @@ async function assertTenantMatch(profile) {
   const ctx = window.tenantContext;
   if (ctx.type !== 'tenant') return true; // root/super-admin pages skip check
 
+  // Super admin is allowed on ANY subdomain — decide this before resolving
+  // the tenant so a transient/failed tenant lookup can never lock them out.
+  if (profile.role === 'super_admin') return true;
+
   const tenant = await resolveTenant();
   if (!tenant) return false;
-
-  if (profile.role === 'super_admin') return true; // super admin can visit any subdomain
 
   if (profile.tenant_id !== tenant.id) {
     // Redirect to login on the SAME subdomain, not root, to avoid cross-domain reload loops
