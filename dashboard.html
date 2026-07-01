@@ -544,7 +544,18 @@ window.addEventListener('load', async () => {
     // Tenant match guard for non-super_admin on subdomains
     if (subCtx.type === 'tenant') {
       const ok = await assertTenantMatch(_profile);
-      if (!ok) return;
+      if (!ok) {
+        // assertTenantMatch already redirects itself for a real tenant
+        // mismatch; if we're still here, there's just no tenant to show
+        // (e.g. account registered but not yet assigned by an admin).
+        // Show that in place rather than bouncing to another domain.
+        const deniedText = document.querySelector('#deniedSection p.text-sm');
+        if (deniedText && !_profile?.tenant_id) {
+          deniedText.textContent = 'Your account is registered but not yet assigned to this village council. Please wait for an admin to approve your account.';
+        }
+        show('deniedSection');
+        return;
+      }
 
       if (role === 'super_admin' && !_tenant) {
         _tenant = window.tenantContext.tenant || await resolveTenant();
