@@ -71,7 +71,12 @@ async function assertTenantMatch(profile) {
   if (profile.role === 'super_admin') return true; // super admin can visit any subdomain
 
   if (profile.tenant_id !== tenant.id) {
-    window.location.href = 'https://enga.in/login.html';
+    // Redirect to login on the SAME subdomain, not root, to avoid cross-domain reload loops
+    const currentHost = window.location.hostname;
+    const loginUrl = currentHost.endsWith('enga.in') && currentHost !== 'enga.in' && currentHost !== 'www.enga.in'
+      ? '/login.html?from=dashboard'
+      : 'https://enga.in/login.html?from=dashboard';
+    window.location.href = loginUrl;
     return false;
   }
   return true;

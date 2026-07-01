@@ -95,7 +95,32 @@ async function login() {
 
     msg.textContent = "Login successful. Redirecting…";
     msg.className = "mt-4 text-sm text-center text-green-400 min-h-5";
-    setTimeout(() => { window.location.replace("dashboard.html"); }, 400);
+
+    // Smart redirect based on user role and subdomain context
+    setTimeout(async () => {
+      try {
+        const { data: profileData } = await supabaseClient
+          .from('profiles')
+          .select('role, tenant_id, tenant:tenants(subdomain)')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileData && profileData.role !== 'super_admin' && profileData.tenant?.subdomain) {
+          // Tenant user — redirect to their subdomain
+          const currentHost = window.location.hostname;
+          const targetHost = `${profileData.tenant.subdomain}.enga.in`;
+          if (currentHost !== targetHost) {
+            window.location.replace(`https://${targetHost}/dashboard.html?from=login`);
+            return;
+          }
+        }
+        // Super admin or already on correct subdomain
+        window.location.replace("dashboard.html?from=login");
+      } catch (err) {
+        console.error('Profile lookup failed:', err);
+        window.location.replace("dashboard.html?from=login");
+      }
+    }, 400);
 
   } catch (e) {
     msg.textContent = "System error: " + e.message;
@@ -109,10 +134,34 @@ document.getElementById("email").addEventListener("keydown", (e) => { if (e.key 
 document.getElementById("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
 
 window.addEventListener("load", async () => {
+  // Break redirect loops — if we came from dashboard with error, don't auto-redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('from') === 'dashboard') {
+    console.log('Redirected from dashboard — skipping auto-redirect to break loop');
+    return;
+  }
+
   try {
     await waitForSupabase();
     const { data } = await supabaseClient.auth.getSession();
-    if (data.session) window.location.replace("dashboard.html");
+    if (data.session) {
+      // Already logged in — smart redirect
+      const { data: profileData } = await supabaseClient
+        .from('profiles')
+        .select('role, tenant_id, tenant:tenants(subdomain)')
+        .eq('id', data.session.user.id)
+        .single();
+
+      if (profileData && profileData.role !== 'super_admin' && profileData.tenant?.subdomain) {
+        const currentHost = window.location.hostname;
+        const targetHost = `${profileData.tenant.subdomain}.enga.in`;
+        if (currentHost !== targetHost) {
+          window.location.replace(`https://${targetHost}/dashboard.html?from=login`);
+          return;
+        }
+      }
+      window.location.replace("dashboard.html?from=login");
+    }
   } catch (err) {
     console.error('Login bootstrap failed:', err);
   }

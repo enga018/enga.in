@@ -9,23 +9,29 @@ const AUTH_COOKIE_NAME = 'sb:auth.token';
 const AUTH_COOKIE_DOMAIN = window.location.hostname.endsWith('enga.in') ? '.enga.in' : undefined;
 
 function getCookie(name) {
-  const cookie = document.cookie
+  const match = document.cookie
     .split(';')
     .map(part => part.trim())
     .find(part => part.startsWith(name + '='));
-  if (!cookie) return null;
-  return decodeURIComponent(cookie.slice(name.length + 1));
+  if (!match) return null;
+  return decodeURIComponent(match.slice(name.length + 1));
 }
 
 function setCookie(name, value) {
   const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
   const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
   document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Max-Age=31536000${domainPart}${secureFlag}`;
+  // Also set WITHOUT explicit domain so the current host always has it
+  // (browsers treat host-only and domain cookies as separate entries)
+  if (AUTH_COOKIE_DOMAIN) {
+    document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Max-Age=31536000${secureFlag}`;
+  }
 }
 
 function deleteCookie(name) {
   const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
   document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT${domainPart}; SameSite=Lax`;
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
 }
 
 const cookieStorage = {
@@ -51,6 +57,7 @@ function initSupabase() {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         persistSession: true,
+        autoRefreshToken: true,
         detectSessionInUrl: false,
         storage: cookieStorage,
         storageKey: AUTH_COOKIE_NAME,
@@ -83,7 +90,7 @@ async function getUser() {
 async function requireAuth() {
   const user = await getUser();
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "login.html?from=dashboard";
     return null;
   }
   return user;
