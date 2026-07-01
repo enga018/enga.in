@@ -69,6 +69,11 @@
         </div>
         <div id="sa_moduleCards" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
+
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Property Prefixes in Use</h2>
+        <div id="sa_prefixList" class="flex flex-wrap gap-2"></div>
+      </div>
     </main>
   </div>
 
@@ -621,6 +626,22 @@ async function loadSuperAdmin({ profile }) {
   const tenantsById = (tenantListRes.data || []).reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
 
   renderModuleCatalog('sa_moduleCards', moduleTenantsMap, tenantsById);
+
+  // Display all property prefixes in use with VC names
+  const prefixVcMap = {};
+  (tenantListRes.data || []).forEach(t => {
+    if (t.property_prefix) {
+      if (!prefixVcMap[t.property_prefix]) prefixVcMap[t.property_prefix] = [];
+      prefixVcMap[t.property_prefix].push(t.name);
+    }
+  });
+  const prefixListEl = document.getElementById('sa_prefixList');
+  if (prefixListEl) {
+    const sortedPrefixes = Object.keys(prefixVcMap).sort();
+    prefixListEl.innerHTML = sortedPrefixes.length
+      ? sortedPrefixes.map(p => `<span class="inline-flex items-center rounded-full bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5">${p} <span class="text-gray-400 ml-1">(${prefixVcMap[p].join(', ')})</span></span>`).join('')
+      : '<span class="text-sm text-gray-400">No prefixes in use yet</span>';
+  }
 
   const tenants = (tenantListRes.data || []).map(t => ({
     id: t.id,
