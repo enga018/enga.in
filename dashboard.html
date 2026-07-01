@@ -928,6 +928,7 @@ async function refreshWorkerList(tenantId) {
   const list = document.getElementById('ad_workerList');
   const active = (workers || []).filter(w => w.status !== 'pending');
 
+  if (list) {
   if (!active.length) {
     list.innerHTML = '<div class="text-sm text-gray-400 py-4 text-center">No workers yet.</div>';
   } else {
@@ -949,11 +950,12 @@ async function refreshWorkerList(tenantId) {
       </div>
     `).join('');
   }
+  }
 
   // Pending section
   const pendingSection = document.getElementById('ad_pendingSection');
   const pendingList    = document.getElementById('ad_pendingList');
-  if (pending?.length) {
+  if (pendingSection && pendingList && pending?.length) {
     pendingSection.classList.remove('hidden');
     pendingList.innerHTML = pending.map(w => `
       <div class="flex items-center justify-between bg-amber-50 rounded-lg px-4 py-3 border border-amber-200">
@@ -967,7 +969,7 @@ async function refreshWorkerList(tenantId) {
         </button>
       </div>
     `).join('');
-  } else {
+  } else if (pendingSection) {
     pendingSection.classList.add('hidden');
   }
 }
