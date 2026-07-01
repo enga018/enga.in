@@ -49,8 +49,11 @@ async function resolveTenant() {
     .maybeSingle();
 
   if (!data) {
-    // Unknown subdomain — redirect to root
-    window.location.href = 'https://enga.in';
+    // No tenant row visible for this subdomain — either it doesn't exist,
+    // or RLS is hiding it because this user has no/mismatched tenant_id.
+    // Don't redirect cross-domain here: callers decide how to handle "no
+    // tenant" on the current page (redirecting to enga.in bounces back and
+    // forth with login.html/dashboard.html since the user stays logged in).
     return null;
   }
 
