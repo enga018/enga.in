@@ -5,66 +5,27 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let supabaseClient = null;
 
-const AUTH_COOKIE_NAME = 'sb:auth.token';
-const AUTH_COOKIE_DOMAIN = window.location.hostname.endsWith('enga.in') ? '.enga.in' : undefined;
-
-function getCookie(name) {
-  const match = document.cookie
-    .split(';')
-    .map(part => part.trim())
-    .find(part => part.startsWith(name + '='));
-  if (!match) return null;
-  return decodeURIComponent(match.slice(name.length + 1));
-}
-
-function setCookie(name, value) {
-  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
-  const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Max-Age=31536000${domainPart}${secureFlag}`;
-  // Also set WITHOUT explicit domain so the current host always has it
-  // (browsers treat host-only and domain cookies as separate entries)
-  if (AUTH_COOKIE_DOMAIN) {
-    document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Max-Age=31536000${secureFlag}`;
-  }
-}
-
-function deleteCookie(name) {
-  const domainPart = AUTH_COOKIE_DOMAIN ? `; Domain=${AUTH_COOKIE_DOMAIN}` : '';
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT${domainPart}; SameSite=Lax`;
-  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-}
-
-const cookieStorage = {
-  getItem(key) {
-    return getCookie(key);
-  },
-  setItem(key, value) {
-    setCookie(key, value);
-    return true;
-  },
-  removeItem(key) {
-    deleteCookie(key);
-    return true;
-  },
-};
-
 function initSupabase() {
   try {
     if (!window.supabase) {
       console.error("Supabase CDN not loaded");
       return;
     }
+    // Each *.enga.in origin keeps its own session in localStorage (the
+    // supabase-js default). Sessions never need to cross subdomains on
+    // their own — see buildHandoffUrl()/consumeSessionHandoff() below for
+    // the one case that does (super admin "Visit" and post-login redirect
+    // to a tenant's own subdomain). A shared cookie was tried previously
+    // but a single Supabase session easily exceeds the 4KB per-cookie
+    // limit and silently gets dropped, which looked like random logouts.
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: false,
-        storage: cookieStorage,
-        storageKey: AUTH_COOKIE_NAME,
       },
     });
     window.supabaseClient = supabaseClient;
-    console.log("Supabase initialized with cross-subdomain auth storage");
   } catch (err) {
     console.error("Supabase init failed:", err);
   }
@@ -76,10 +37,19 @@ window.addEventListener("error", (e) => {
   console.error("JS ERROR:", e.message);
 });
 
-// Establishes the session on this origin from a URL fragment left by a
-// session-handoff link (e.g. super admin "Visit →"), instead of relying on
-// the cross-subdomain auth cookie having propagated by page load. Returns
-// true if a session was set from the fragment.
+// Builds a cross-subdomain link that carries the current session in the URL
+// fragment (never sent to the server, so it never hits logs). Use this
+// instead of a plain <a href>/location.href whenever navigation crosses from
+// one *.enga.in origin to another and the destination should already be
+// signed in.
+function buildHandoffUrl(targetUrl, session) {
+  if (!session) return targetUrl;
+  const params = new URLSearchParams({ access_token: session.access_token, refresh_token: session.refresh_token });
+  return `${targetUrl}#${params.toString()}`;
+}
+
+// Establishes the session on this origin from a URL fragment built by
+// buildHandoffUrl(). Returns true if a session was set from the fragment.
 async function consumeSessionHandoff() {
   if (!window.location.hash.includes('access_token')) return false;
   const hashParams = new URLSearchParams(window.location.hash.slice(1));

@@ -106,11 +106,12 @@ async function login() {
           .single();
 
         if (profileData && profileData.role !== 'super_admin' && profileData.tenant?.subdomain) {
-          // Tenant user — redirect to their subdomain
+          // Tenant user — redirect to their subdomain, carrying the session
+          // over since it lives in this origin's localStorage only
           const currentHost = window.location.hostname;
           const targetHost = `${profileData.tenant.subdomain}.enga.in`;
           if (currentHost !== targetHost) {
-            window.location.replace(`https://${targetHost}/dashboard.html?from=login`);
+            window.location.replace(buildHandoffUrl(`https://${targetHost}/dashboard.html?from=login`, data.session));
             return;
           }
         }
@@ -156,7 +157,7 @@ window.addEventListener("load", async () => {
         const currentHost = window.location.hostname;
         const targetHost = `${profileData.tenant.subdomain}.enga.in`;
         if (currentHost !== targetHost) {
-          window.location.replace(`https://${targetHost}/dashboard.html?from=login`);
+          window.location.replace(buildHandoffUrl(`https://${targetHost}/dashboard.html?from=login`, data.session));
           return;
         }
       }

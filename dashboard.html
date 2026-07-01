@@ -516,11 +516,11 @@ window.addEventListener('load', async () => {
       return;
     }
 
-    // Session handoff from super admin's "Visit →" link, if present
+    // Session handoff from a cross-subdomain link (super admin "Visit →",
+    // or login.html redirecting a tenant user to their own subdomain)
     await consumeSessionHandoff();
 
     // Try to get profile; if null on first try, wait and retry once
-    // (cross-subdomain cookie may need a moment for autoRefreshToken to settle)
     let ctx = await getProfile();
     if (!ctx) {
       await new Promise(r => setTimeout(r, 500));
@@ -697,14 +697,13 @@ async function loadSuperAdmin({ profile }) {
   `).join('');
 }
 
-// Hand the current session off to a tenant subdomain via URL fragment so the
-// super admin lands there already signed in, instead of depending on the
-// cross-subdomain auth cookie having propagated by the time the page loads.
+// Hand the current session off to a tenant subdomain so the super admin
+// lands there already signed in, opened in a new tab so the super admin
+// dashboard stays put.
 async function visitTenant(subdomain) {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) { window.location.href = `https://${subdomain}.enga.in/dashboard.html`; return; }
-  const handoff = new URLSearchParams({ access_token: session.access_token, refresh_token: session.refresh_token });
-  window.location.href = `https://${subdomain}.enga.in/dashboard.html#${handoff.toString()}`;
+  const url = buildHandoffUrl(`https://${subdomain}.enga.in/dashboard.html`, session);
+  window.open(url, '_blank');
 }
 
 function renderModuleCatalog(containerId, tenantsByModule, tenantsById) {

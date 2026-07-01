@@ -35,7 +35,7 @@ window.addEventListener('load', async () => {
   if (role === 'super_admin') {
     window.location.replace('dashboard.html');
   } else if (tenant?.subdomain) {
-    window.location.replace(`https://${tenant.subdomain}.enga.in/dashboard.html`);
+    window.location.replace(buildHandoffUrl(`https://${tenant.subdomain}.enga.in/dashboard.html`, data.session));
   } else {
     window.location.replace('login.html');
   }
