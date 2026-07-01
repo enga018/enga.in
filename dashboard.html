@@ -516,6 +516,9 @@ window.addEventListener('load', async () => {
       return;
     }
 
+    // Session handoff from super admin's "Visit →" link, if present
+    await consumeSessionHandoff();
+
     // Try to get profile; if null on first try, wait and retry once
     // (cross-subdomain cookie may need a moment for autoRefreshToken to settle)
     let ctx = await getProfile();
@@ -550,7 +553,7 @@ window.addEventListener('load', async () => {
         // (e.g. account registered but not yet assigned by an admin).
         // Show that in place rather than bouncing to another domain.
         const deniedText = document.querySelector('#deniedSection p.text-sm');
-        if (deniedText && !_profile?.tenant_id) {
+        if (deniedText && role !== 'super_admin' && !_profile?.tenant_id) {
           deniedText.textContent = 'Your account is registered but not yet assigned to this village council. Please wait for an admin to approve your account.';
         }
         show('deniedSection');
@@ -684,7 +687,7 @@ async function loadSuperAdmin({ profile }) {
           <div class="mt-3 flex flex-wrap gap-2">${t.modules.length ? t.modules.map(code => `<span class="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-medium px-2.5 py-1">${MODULE_META[code]?.label || code}</span>`).join('') : '<span class="inline-flex items-center rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1">No modules assigned</span>'}</div>
         </div>
         <div class="flex items-center gap-3">
-          <a href="https://${t.subdomain}.enga.in/dashboard.html"
+          <a href="#" onclick="visitTenant('${t.subdomain}'); return false;"
             class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors">Visit →</a>
           <button onclick="openVcModal('${t.id}')" class="text-xs text-gray-500 hover:text-gray-700 transition-colors">Edit</button>
           <button onclick="deleteVc('${t.id}', '${t.name}')" class="text-xs text-red-400 hover:text-red-600 transition-colors">Delete</button>
@@ -692,6 +695,16 @@ async function loadSuperAdmin({ profile }) {
       </div>
     </div>
   `).join('');
+}
+
+// Hand the current session off to a tenant subdomain via URL fragment so the
+// super admin lands there already signed in, instead of depending on the
+// cross-subdomain auth cookie having propagated by the time the page loads.
+async function visitTenant(subdomain) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) { window.location.href = `https://${subdomain}.enga.in/dashboard.html`; return; }
+  const handoff = new URLSearchParams({ access_token: session.access_token, refresh_token: session.refresh_token });
+  window.location.href = `https://${subdomain}.enga.in/dashboard.html#${handoff.toString()}`;
 }
 
 function renderModuleCatalog(containerId, tenantsByModule, tenantsById) {

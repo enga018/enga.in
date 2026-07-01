@@ -76,6 +76,26 @@ window.addEventListener("error", (e) => {
   console.error("JS ERROR:", e.message);
 });
 
+// Establishes the session on this origin from a URL fragment left by a
+// session-handoff link (e.g. super admin "Visit →"), instead of relying on
+// the cross-subdomain auth cookie having propagated by page load. Returns
+// true if a session was set from the fragment.
+async function consumeSessionHandoff() {
+  if (!window.location.hash.includes('access_token')) return false;
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  const access_token = hashParams.get('access_token');
+  const refresh_token = hashParams.get('refresh_token');
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  if (!access_token || !refresh_token) return false;
+  try {
+    const { error } = await supabaseClient.auth.setSession({ access_token, refresh_token });
+    return !error;
+  } catch (err) {
+    console.error('consumeSessionHandoff failed:', err);
+    return false;
+  }
+}
+
 async function getUser() {
   if (!supabaseClient?.auth?.getSession) return null;
   try {
