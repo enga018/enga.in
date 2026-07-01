@@ -1,7 +1,10 @@
 -- Modules Table
 -- Stores module definitions that super admin can manage (add/edit/view)
 
-CREATE TABLE IF NOT EXISTS modules (
+-- Drop existing table if it has wrong schema
+DROP TABLE IF EXISTS modules CASCADE;
+
+CREATE TABLE modules (
   app_code TEXT PRIMARY KEY,          -- 'property', 'family', 'property_tax'
   label TEXT NOT NULL,                -- 'Property Survey'
   description TEXT,                   -- 'Record building details, ownership, GPS, and photos.'
