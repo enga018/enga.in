@@ -6,7 +6,7 @@
   <title>Dashboard — enga.in</title>
   <script src="subdomain-context.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -479,56 +479,67 @@ let _vcModuleCodes = [];
 
 // ─── boot ───────────────────────────────────────────────────
 window.addEventListener('load', async () => {
-  await waitForSupabase();
-
-  const ctx = await getProfile();
-  if (!ctx) { window.location.href = 'login.html'; return; }
-
-  _profile = ctx.profile;
-  _tenant  = ctx.tenant;
-
-  const role    = _profile?.role;
-  const subCtx  = window.tenantContext;
-
-  // Tenant match guard for non-super_admin on subdomains
-  if (subCtx.type === 'tenant') {
-    const ok = await assertTenantMatch(_profile);
-    if (!ok) return;
-
-    if (role === 'super_admin' && !_tenant) {
-      _tenant = window.tenantContext.tenant || await resolveTenant();
-      ctx.tenant = _tenant;
+  try {
+    const ready = await waitForSupabase();
+    if (!ready || !supabaseClient?.auth?.getSession) {
+      window.location.href = 'login.html';
+      return;
     }
-  }
 
-  // Route
-  if (role === 'super_admin' && (subCtx.type === 'root' || subCtx.type === 'super-admin')) {
-    await loadSuperAdmin(ctx);
-  } else if (role === 'super_admin' && subCtx.type === 'tenant') {
-    // Super admin visiting a tenant subdomain — show admin dashboard with full access
-    await loadAdmin({ profile: _profile, tenant: _tenant || ctx.tenant });
-  } else if (role === 'admin' && subCtx.type === 'tenant') {
-    await loadAdmin(ctx);
-  } else if (role === 'worker' && subCtx.type === 'tenant') {
-    await loadWorker(ctx);
-  } else if (role === 'supervisor' && subCtx.type === 'tenant') {
-    await loadSupervisor(ctx);
-  } else {
-    show('deniedSection');
-  }
+    const ctx = await getProfile();
+    if (!ctx) { window.location.href = 'login.html'; return; }
 
-  hide('loadingScreen');
+    _profile = ctx.profile;
+    _tenant  = ctx.tenant;
+
+    const role    = _profile?.role;
+    const subCtx  = window.tenantContext;
+
+    // Tenant match guard for non-super_admin on subdomains
+    if (subCtx.type === 'tenant') {
+      const ok = await assertTenantMatch(_profile);
+      if (!ok) return;
+
+      if (role === 'super_admin' && !_tenant) {
+        _tenant = window.tenantContext.tenant || await resolveTenant();
+        ctx.tenant = _tenant;
+      }
+    }
+
+    // Route
+    if (role === 'super_admin' && (subCtx.type === 'root' || subCtx.type === 'super-admin')) {
+      await loadSuperAdmin(ctx);
+    } else if (role === 'super_admin' && subCtx.type === 'tenant') {
+      // Super admin visiting a tenant subdomain — show admin dashboard with full access
+      await loadAdmin({ profile: _profile, tenant: _tenant || ctx.tenant });
+    } else if (role === 'admin' && subCtx.type === 'tenant') {
+      await loadAdmin(ctx);
+    } else if (role === 'worker' && subCtx.type === 'tenant') {
+      await loadWorker(ctx);
+    } else if (role === 'supervisor' && subCtx.type === 'tenant') {
+      await loadSupervisor(ctx);
+    } else {
+      show('deniedSection');
+    }
+  } catch (err) {
+    console.error('Dashboard boot failed:', err);
+    window.location.href = 'login.html';
+  } finally {
+    hide('loadingScreen');
+  }
 });
 
 // ─── SUPER ADMIN ────────────────────────────────────────────
 async function loadSuperAdmin({ profile }) {
-  document.getElementById('sa_userName').textContent = profile?.full_name || 'Super Admin';
+  const userNameEl = document.getElementById('sa_userName');
+  if (userNameEl) userNameEl.textContent = profile?.full_name || 'Super Admin';
   show('superAdminSection');
 
   const [tenantRes] = await Promise.all([
     supabaseClient.from('tenants').select('id', { count: 'exact', head: true }),
   ]);
-  document.getElementById('sa_statTenants').textContent     = tenantRes.count ?? '—';
+  const statTenantsEl = document.getElementById('sa_statTenants');
+  if (statTenantsEl) statTenantsEl.textContent = tenantRes.count ?? '—';
 
   const [tenantListRes, adminProfilesRes, assignmentRes] = await Promise.all([
     supabaseClient.from('tenants').select('id, name, subdomain, property_prefix').order('name'),
@@ -563,10 +574,13 @@ async function loadSuperAdmin({ profile }) {
     modules: tenantModulesMap[t.id] || [],
   }));
 
-  document.getElementById('sa_tenantHeader').textContent = `Village Councils (${tenants.length})`;
-  document.getElementById('sa_moduleHeader').textContent = `Modules (${ALL_MODULE_CODES.length})`;
+  const tenantHeaderEl = document.getElementById('sa_tenantHeader');
+  const moduleHeaderEl = document.getElementById('sa_moduleHeader');
+  if (tenantHeaderEl) tenantHeaderEl.textContent = `Village Councils (${tenants.length})`;
+  if (moduleHeaderEl) moduleHeaderEl.textContent = `Modules (${ALL_MODULE_CODES.length})`;
 
   const list = document.getElementById('sa_tenantList');
+  if (!list) return;
   if (!tenants?.length) {
     list.innerHTML = '<div class="text-sm text-gray-400 py-4 text-center">No village councils yet. <a href="#" onclick="openVcModal()" class="text-indigo-600 hover:underline">Create one →</a></div>';
     return;

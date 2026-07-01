@@ -6,12 +6,17 @@
   <title>enga.in</title>
   <script src="subdomain-context.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </head>
 <body>
 <script>
 window.addEventListener('load', async () => {
-  await waitForSupabase();
+  const ready = await waitForSupabase();
+  if (!ready || !supabaseClient?.auth?.getSession) {
+    window.location.replace('login.html');
+    return;
+  }
+
   const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
     window.location.replace('login.html');

@@ -66,7 +66,7 @@ window.addEventListener("error", (e) => {
 });
 
 async function getUser() {
-  // getSession reads localStorage (no network call) — faster and more reliable on page load
+  if (!supabaseClient?.auth?.getSession) return null;
   const { data: { session } } = await supabaseClient.auth.getSession();
   return session?.user ?? null;
 }
@@ -203,10 +203,12 @@ function redirectToDashboard(role) {
   }
 }
 
-function waitForSupabase() {
+function waitForSupabase(timeoutMs = 3000) {
   return new Promise((resolve) => {
+    const startedAt = Date.now();
     const check = () => {
-      if (window.supabaseClient) return resolve();
+      if (window.supabaseClient) return resolve(true);
+      if (Date.now() - startedAt >= timeoutMs) return resolve(false);
       setTimeout(check, 50);
     };
     check();
