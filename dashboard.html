@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — enga.in</title>
-  <script src="subdomain-context.js?v=7"></script>
+  <script src="subdomain-context.js?v=8"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -469,7 +469,7 @@
   <div id="profileModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl w-full max-w-md shadow-xl">
       <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-semibold text-gray-900">Profile</h3>
+        <h3 class="font-semibold text-gray-900">My Profile</h3>
         <button onclick="closeProfileModal()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -483,22 +483,19 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Email</label>
-          <p class="text-sm font-medium text-gray-900" id="pm_email">—</p>
+          <input id="pm_email" type="email" placeholder="email@example.com"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
-        <div id="pm_passwordSection" class="hidden">
-          <label class="block text-xs text-gray-500 mb-1">Password</label>
-          <div class="flex items-center gap-2">
-            <input id="pm_password" type="password" placeholder="••••••••" disabled
-              class="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-gray-50 text-gray-500">
-            <button onclick="togglePasswordVisibility()" class="text-gray-400 hover:text-gray-600 px-2 py-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-            </button>
-          </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">New Password (leave blank to keep current)</label>
+          <input id="pm_password" type="password" placeholder="••••••••"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <p id="pm_msg" class="text-xs min-h-4"></p>
+      </div>
+      <div class="p-5 border-t border-gray-100 flex gap-2">
+        <button onclick="closeProfileModal()" class="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+        <button onclick="saveProfileChanges()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors">Save Changes</button>
       </div>
     </div>
   </div>
@@ -1726,21 +1723,15 @@ async function deleteVc(vcId, vcName) {
 function openProfileModal() {
   const pmName = document.getElementById('pm_name');
   const pmEmail = document.getElementById('pm_email');
-  const pmPasswordSection = document.getElementById('pm_passwordSection');
+  const pmPassword = document.getElementById('pm_password');
   const pmMsg = document.getElementById('pm_msg');
 
   pmMsg.textContent = '';
   pmMsg.className = 'text-xs min-h-4';
-  pmPasswordSection.classList.add('hidden');
 
   if (pmName) pmName.textContent = _profile?.full_name || '—';
-  if (pmEmail) pmEmail.textContent = _profile?.email || '—';
-
-  const passwordInput = document.getElementById('pm_password');
-  if (passwordInput) {
-    passwordInput.value = '••••••••';
-    passwordInput.type = 'password';
-  }
+  if (pmEmail) pmEmail.value = _profile?.email || '';
+  if (pmPassword) pmPassword.value = '';
 
   document.getElementById('profileModal').classList.remove('hidden');
 }
@@ -1749,12 +1740,55 @@ function closeProfileModal() {
   document.getElementById('profileModal').classList.add('hidden');
 }
 
-function togglePasswordVisibility() {
-  const input = document.getElementById('pm_password');
-  if (input.type === 'password') {
-    input.type = 'text';
-  } else {
-    input.type = 'password';
+async function saveProfileChanges() {
+  const email = document.getElementById('pm_email').value.trim();
+  const password = document.getElementById('pm_password').value;
+  const msgEl = document.getElementById('pm_msg');
+
+  if (!email) {
+    msgEl.textContent = 'Enter email.';
+    msgEl.className = 'text-xs text-red-500 min-h-4';
+    return;
+  }
+
+  msgEl.textContent = 'Saving changes…';
+  msgEl.className = 'text-xs text-gray-500 min-h-4';
+
+  try {
+    // Update email in profiles if changed
+    if (email !== _profile.email) {
+      const { error: emailError } = await supabaseClient
+        .from('profiles')
+        .update({ email })
+        .eq('id', _profile.id);
+
+      if (emailError) {
+        msgEl.textContent = emailError.message;
+        msgEl.className = 'text-xs text-red-500 min-h-4';
+        return;
+      }
+    }
+
+    // Update password via Edge Function if provided
+    if (password) {
+      const { error: pwError } = await supabaseClient.functions.invoke('update-admin-password', {
+        body: { admin_user_id: _profile.id, new_password: password },
+      });
+
+      if (pwError) {
+        msgEl.textContent = 'Email updated but password change failed. ' + (pwError.message || '');
+        msgEl.className = 'text-xs text-amber-600 min-h-4';
+        return;
+      }
+    }
+
+    msgEl.textContent = 'Profile saved successfully.';
+    msgEl.className = 'text-xs text-green-600 min-h-4';
+    _profile.email = email;
+    setTimeout(() => closeProfileModal(), 1200);
+  } catch (err) {
+    msgEl.textContent = err.message;
+    msgEl.className = 'text-xs text-red-500 min-h-4';
   }
 }
 </script>
