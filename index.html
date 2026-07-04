@@ -3,174 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>enga.in - Village Council Management</title>
+  <title>enga.in</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #1a1a2e;
-      background: #fff;
-    }
-
-    nav {
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 5%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
+      justify-content: center;
+      background: #fff;
       color: #1a1a2e;
-      text-decoration: none;
+      text-align: center;
+      padding: 2rem;
     }
-    .logo span { color: #e94560; }
-    nav a.cta {
-      padding: 0.6rem 1.4rem;
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    h1 span { color: #e94560; }
+    p {
+      font-size: 1.15rem;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    a {
+      padding: 0.8rem 2rem;
       background: #e94560;
       color: #fff;
       text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: background 0.2s;
-    }
-    nav a.cta:hover { background: #d63851; }
-
-    .hero {
-      text-align: center;
-      padding: 6rem 5% 4rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .hero h1 {
-      font-size: 3.2rem;
-      line-height: 1.15;
-      margin-bottom: 1.2rem;
-      font-weight: 800;
-    }
-    .hero h1 span { color: #e94560; }
-    .hero p {
-      font-size: 1.2rem;
-      color: #555;
-      line-height: 1.7;
-      margin-bottom: 2.5rem;
-    }
-    .hero .btn-group {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .hero a {
-      padding: 0.85rem 2rem;
       border-radius: 10px;
       font-weight: 600;
       font-size: 1rem;
-      text-decoration: none;
-      transition: all 0.2s;
+      transition: background 0.2s;
     }
-    .hero .btn-primary {
-      background: #e94560;
-      color: #fff;
-    }
-    .hero .btn-primary:hover { background: #d63851; }
-    .hero .btn-secondary {
-      background: #f0f0f0;
-      color: #1a1a2e;
-    }
-    .hero .btn-secondary:hover { background: #e0e0e0; }
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 4rem 5% 6rem;
-    }
-    .feature {
-      padding: 2rem;
-      border-radius: 14px;
-      background: #fafafa;
-      border: 1px solid #f0f0f0;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .feature:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-    }
-    .feature .icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: #e94560;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-    }
-    .feature h3 {
-      font-size: 1.15rem;
-      margin-bottom: 0.5rem;
-    }
-    .feature p {
-      font-size: 0.95rem;
-      color: #666;
-      line-height: 1.6;
-    }
-
-    footer {
-      text-align: center;
-      padding: 2rem 5%;
-      border-top: 1px solid #f0f0f0;
-      color: #999;
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 600px) {
-      .hero h1 { font-size: 2.2rem; }
-      nav { padding: 1rem 5%; }
-    }
+    a:hover { background: #d63851; }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="/" class="logo">enga<span>.in</span></a>
-    <a href="https://villagecouncil.enga.in" class="cta">Open App</a>
-  </nav>
-
-  <section class="hero">
-    <h1>Village Council<br>Management <span>Made Simple</span></h1>
-    <p>A digital platform for village councils to manage households, surveys, and community data — all in one place.</p>
-    <div class="btn-group">
-      <a href="https://villagecouncil.enga.in" class="btn-primary">Get Started</a>
-      <a href="#features" class="btn-secondary">Learn More</a>
-    </div>
-  </section>
-
-  <section class="features" id="features">
-    <div class="feature">
-      <div class="icon">&#9734;</div>
-      <h3>Household Management</h3>
-      <p>Register and manage households with property IDs, family details, and ownership records.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">&#9997;</div>
-      <h3>Digital Surveys</h3>
-      <p>Conduct surveys digitally with real-time data collection and review workflows.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">&#9881;</div>
-      <h3>Admin Dashboard</h3>
-      <p>Full admin control to manage users, roles, and view analytics across your village.</p>
-    </div>
-  </section>
-
-  <footer>&copy; 2026 enga.in. All rights reserved.</footer>
+  <h1>enga<span>.in</span></h1>
+  <p>Village Council Management Platform</p>
+  <a href="https://villagecouncil.enga.in">Open App</a>
 </body>
 </html>
