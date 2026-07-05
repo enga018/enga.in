@@ -3,36 +3,292 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>enga.in</title>
+  <meta name="theme-color" content="#000000">
+  <title>enga</title>
   <style>
+    :root {
+      --bg: #000000;
+      --accent: #e94560;
+      --text: #ffffff;
+      --muted: #666666;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #fff;
-      color: #1a1a2e;
+      overflow: hidden;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      background: radial-gradient(ellipse at center, rgba(26, 26, 46, 0.4) 0%, rgba(12, 12, 40, 0.3) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .spotlight {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(233, 69, 96, 0.06) 0%, rgba(233, 69, 96, 0.03) 30%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      transition: background 0.4s ease;
+      will-change: left, top;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
       text-align: center;
       padding: 2rem;
     }
-    h1 {
-      font-size: 3rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
+
+    .name {
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 200;
+      letter-spacing: 0.25em;
+      color: var(--text);
+      text-shadow:
+        0 0 40px rgba(255, 255, 255, 0.3),
+        0 0 80px rgba(255, 255, 255, 0.1),
+        0 0 120px rgba(233, 69, 96, 0.15);
+      animation: fadeUp 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                 pulse 4s ease-in-out 1.6s infinite;
+      opacity: 0;
+      transform: translateY(24px);
     }
-    h1 span { color: #e94560; }
-    p {
-      font-size: 1.15rem;
-      color: #666;
-      margin-bottom: 2rem;
+
+    .name .dot {
+      color: var(--accent);
+      text-shadow:
+        0 0 20px rgba(233, 69, 96, 0.6),
+        0 0 60px rgba(233, 69, 96, 0.3);
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 40px rgba(255,255,255,0.3), 0 0 80px rgba(255,255,255,0.1), 0 0 120px rgba(233,69,96,0.15); }
+      50%      { text-shadow: 0 0 55px rgba(255,255,255,0.4), 0 0 100px rgba(255,255,255,0.18), 0 0 150px rgba(233,69,96,0.25); }
+    }
+
+    .separator {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      margin: 2.5rem auto;
+      animation: fadeUp 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    .tag {
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      animation: fadeUp 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      color: rgba(255, 255, 255, 0.25);
+      animation: fadeUp 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      z-index: 1;
+      transition: color 0.5s ease;
+    }
+
+    .footer:hover {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      .name { letter-spacing: 0.15em; }
+      .separator { width: 40px; }
+      .tag { letter-spacing: 0.2em; }
+      .footer { bottom: 1.5rem; font-size: 0.7rem; }
     }
   </style>
 </head>
 <body>
-  <h1>enga<span>.in</span></h1>
-  <p>Welcome to my website</p>
+
+  <canvas id="particles"></canvas>
+
+  <div class="spotlight" id="spotlight"></div>
+
+  <main class="content">
+    <h1 class="name"><span class="dot">·</span> enga <span class="dot">·</span></h1>
+    <div class="separator"></div>
+    <p class="tag">one name. one presence.</p>
+  </main>
+
+  <p class="footer">enga.in</p>
+
+  <script>
+    (function() {
+
+      var canvas = document.getElementById('particles');
+      var ctx = canvas.getContext('2d');
+      var spotlight = document.getElementById('spotlight');
+      var particles = [];
+      var mouse = { x: -9999, y: -9999 };
+      var width, height;
+      var frameCount = 0;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      document.addEventListener('mousemove', function(e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+
+        spotlight.style.left = e.clientX + 'px';
+        spotlight.style.top = e.clientY + 'px';
+      });
+
+      document.addEventListener('mouseleave', function() {
+        mouse.x = -9999;
+        mouse.y = -9999;
+      });
+
+      document.addEventListener('touchmove', function(e) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+        spotlight.style.left = mouse.x + 'px';
+        spotlight.style.top = mouse.y + 'px';
+      }, { passive: true });
+
+      function Particle() {
+        this.reset();
+      }
+
+      Particle.prototype.reset = function() {
+        this.x = Math.random() * width;
+        this.y = height + 10;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedY = -(Math.random() * 0.5 + 0.2);
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.6 + 0.2;
+        this.fade = Math.random() * 0.003 + 0.001;
+        this.life = 1;
+        this.maxLife = 0.7 + Math.random() * 0.3;
+        var colors = [
+          'rgba(233, 69, 96, OP)',
+          'rgba(255, 180, 100, OP)',
+          'rgba(200, 160, 120, OP)',
+          'rgba(255, 255, 255, OP)'
+        ];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+      };
+
+      Particle.prototype.update = function() {
+        this.life -= this.fade;
+
+        var dx = mouse.x - this.x;
+        var dy = mouse.y - this.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 200 && dist > 0 && mouse.x > -500) {
+          var force = (200 - dist) / 200;
+          var angle = Math.atan2(dy, dx);
+          this.x -= Math.cos(angle) * force * 1.2;
+          this.y -= Math.sin(angle) * force * 1.2;
+        }
+
+        this.y += this.speedY;
+        this.x += this.speedX;
+
+        this.speedX += (Math.random() - 0.5) * 0.04;
+        this.speedY += (Math.random() - 0.5) * 0.04;
+
+        this.speedX *= 0.998;
+        this.speedY *= 0.998;
+
+        if (this.life <= 0 || this.y < -20 || this.x < -20 || this.x > width + 20) {
+          this.reset();
+        }
+      };
+
+      Particle.prototype.draw = function() {
+        var alpha = this.opacity * this.life;
+        var color = this.color.replace('OP', alpha.toFixed(3));
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      var targetCount = 80;
+      for (var i = 0; i < targetCount; i++) {
+        var p = new Particle();
+        p.y = Math.random() * height;
+        p.life = Math.random();
+        particles.push(p);
+      }
+
+      function animate() {
+        frameCount++;
+
+        ctx.clearRect(0, 0, width, height);
+
+        for (var i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+        }
+
+        if (particles.length < targetCount && Math.random() < 0.3) {
+          particles.push(new Particle());
+        }
+        if (particles.length > targetCount) {
+          particles.splice(targetCount);
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+    })();
+  </script>
+
 </body>
 </html>
