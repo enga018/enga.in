@@ -53,35 +53,19 @@
     <section id="categories">
       <div class="wrap">
         <div class="section-top"><div><div class="section-kicker">Explore the collections</div><h2 class="section-title">A world of local craft.</h2></div><p class="section-note">Browse textiles, everyday pieces, flavours and keepsakes — each with a story connected to Mizoram.</p></div>
-        <div class="categories" id="categoryGrid">
-          <button class="category" data-category="Traditional textiles & puan"><div class="cat-art"></div><div class="cat-info"><b>Traditional textiles & puan</b><span>Woven heritage and patterns</span></div></button>
-          <button class="category" data-category="Bamboo & cane products"><div class="cat-art"></div><div class="cat-info"><b>Bamboo & cane</b><span>Useful objects, made by hand</span></div></button>
-          <button class="category" data-category="Clothing & fashion"><div class="cat-art"></div><div class="cat-info"><b>Clothing & fashion</b><span>Traditional and contemporary</span></div></button>
-          <button class="category" data-category="Honey & organic products"><div class="cat-art"></div><div class="cat-info"><b>Honey & organic</b><span>From local growers and makers</span></div></button>
-          <button class="category" data-category="Local food & spices"><div class="cat-art"></div><div class="cat-info"><b>Local food & spices</b><span>Flavours of the region</span></div></button>
-          <button class="category" data-category="Handicrafts & souvenirs"><div class="cat-art"></div><div class="cat-info"><b>Handicrafts & souvenirs</b><span>Thoughtful keepsakes</span></div></button>
-          <button class="category" data-category="Local art & cultural products"><div class="cat-art"></div><div class="cat-info"><b>Local art & culture</b><span>Creative work and stories</span></div></button>
-        </div>
+        <div class="categories" id="categoryGrid" aria-live="polite"><div class="empty">Loading collections…</div></div>
       </div>
     </section>
     <section class="catalogue" id="shop">
       <div class="wrap">
-        <div class="section-top"><div><div class="section-kicker">The enga edit</div><h2 class="section-title">Shop the collection.</h2></div><p class="section-note">A preview catalogue to establish the shopping experience. Sample listings will be replaced with verified products before launch.</p></div>
+        <div class="section-top"><div><div class="section-kicker">The enga edit</div><h2 class="section-title">Shop the collection.</h2></div><p class="section-note">Explore products currently published by our team. Each listing is reviewed before it appears here.</p></div>
         <div class="catalogue-tools">
           <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search products or makers..." aria-label="Search products"></label>
           <select class="select" id="sortSelect" aria-label="Sort products"><option value="featured">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="name">Name: A to Z</option></select>
         </div>
-        <div class="chips" id="filterChips">
-          <button class="chip active" data-filter="all">All products</button>
-          <button class="chip" data-filter="Traditional textiles & puan">Textiles & puan</button>
-          <button class="chip" data-filter="Bamboo & cane products">Bamboo & cane</button>
-          <button class="chip" data-filter="Clothing & fashion">Clothing</button>
-          <button class="chip" data-filter="Honey & organic products">Honey & organic</button>
-          <button class="chip" data-filter="Local food & spices">Food & spices</button>
-          <button class="chip" data-filter="Handicrafts & souvenirs">Handicrafts</button>
-          <button class="chip" data-filter="Local art & cultural products">Art & culture</button>
-        </div>
-        <div class="product-grid" id="productGrid" aria-live="polite"></div>
+        <div class="chips" id="filterChips"><button class="chip active" data-filter="all">All products</button></div>
+        <div id="catalogueStatus" class="catalogue-status" role="status" aria-live="polite"></div>
+        <div class="product-grid" id="productGrid" aria-live="polite"><div class="empty">Loading products…</div></div>
       </div>
     </section>
     <section class="story" id="story">
@@ -91,40 +75,121 @@
       </div>
     </section>
   </main>
-  <footer><div class="wrap"><div class="footer-grid"><div><div class="footer-brand">enga<span>.</span>in</div><p>From Mizoram, with love.<br>A curated home for local products, craft and culture.</p></div><div><div class="footer-heading">Explore</div><a href="#categories">Collections</a><a href="#shop">Shop all</a><a href="#story">Our story</a></div><div><div class="footer-heading">Help</div><a href="#contact">Shipping information</a><a href="#contact">Returns & refunds</a><a href="mailto:support@enga.in">Contact support</a></div></div><div class="copyright">© <span id="year"></span> enga.in · Product listings and imagery shown here are illustrative previews.</div></div></footer>
+  <footer><div class="wrap"><div class="footer-grid"><div><div class="footer-brand">enga<span>.</span>in</div><p>From Mizoram, with love.<br>A curated home for local products, craft and culture.</p></div><div><div class="footer-heading">Explore</div><a href="#categories">Collections</a><a href="#shop">Shop all</a><a href="#story">Our story</a></div><div><div class="footer-heading">Help</div><a href="#contact">Shipping information</a><a href="#contact">Returns & refunds</a><a href="mailto:support@enga.in">Contact support</a></div></div><div class="copyright">© <span id="year"></span> enga.in · Thoughtfully curated from Mizoram.</div></div></footer>
   <div class="modal-backdrop" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal"><button class="close" aria-label="Close product details" onclick="closeModal()">×</button><div class="product-art modal-art" id="modalArt"><div class="fabric"></div></div><div class="modal-content"><div class="product-meta" id="modalCategory"></div><h2 id="modalTitle"></h2><div class="price" id="modalPrice"></div><p id="modalDescription"></p><div class="detail-list" id="modalDetails"></div><div class="modal-actions"><div class="qty"><button onclick="changeQty(-1)" aria-label="Decrease quantity">−</button><span id="qtyValue">1</span><button onclick="changeQty(1)" aria-label="Increase quantity">+</button></div><button class="btn" onclick="addToCart()">Add to cart</button></div></div></div>
   </div>
   <div class="toast" id="toast" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const products = [
-      {id:1,name:'Traditional Puan',category:'Traditional textiles & puan',price:1800,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'',description:'A sample listing for a traditional woven textile. Final product details, dimensions, materials and maker information will be added after verification.',maker:'Maker details pending',material:'To be confirmed'},
-      {id:2,name:'Handwoven Bamboo Basket',category:'Bamboo & cane products',price:650,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'basket',description:'A sample listing for a handwoven bamboo basket. The final listing will include dimensions, finish, care and verified producer details.',maker:'Maker details pending',material:'Bamboo · to be confirmed'},
-      {id:3,name:'Wildflower Honey',category:'Honey & organic products',price:450,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'honey',description:'A sample listing for locally sourced honey. Actual origin, net weight, ingredients, FSSAI details and storage guidance must be verified before publication.',maker:'Producer details pending',material:'Net weight to be confirmed'},
-      {id:4,name:'Woven Everyday Bag',category:'Handicrafts & souvenirs',price:850,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'bag',description:'A sample listing for a woven everyday bag. Final dimensions, materials, available colours and maker details will be confirmed with the producer.',maker:'Maker details pending',material:'Material to be confirmed'},
-      {id:5,name:'Local Spice Selection',category:'Local food & spices',price:320,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'spice',description:'A sample food listing. Ingredients, net quantity, allergen information, shelf life, FSSAI details and storage instructions are required before sale.',maker:'Producer details pending',material:'Ingredients to be confirmed'},
-      {id:6,name:'Mizo Motif Art Print',category:'Local art & cultural products',price:950,origin:'Mizoram · Artist details pending',tag:'Preview',art:'artwork',description:'A sample listing for locally created art. The final page will credit the artist and explain the artwork, print dimensions and edition details.',maker:'Artist details pending',material:'Print specifications pending'},
-      {id:7,name:'Contemporary Puan Jacket',category:'Clothing & fashion',price:2400,origin:'Mizoram · District to be confirmed',tag:'Preview',art:'clothing',description:'A sample clothing listing. Final sizes, fit, fabric composition, care instructions and availability will be confirmed before publication.',maker:'Maker details pending',material:'Fabric to be confirmed'}
-    ];
-    let activeFilter='all',selectedProduct=null,quantity=1,cart=0;
-    const rupees=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n);
-    function renderProducts(){
-      const q=document.getElementById('searchInput').value.trim().toLowerCase(),sort=document.getElementById('sortSelect').value;
-      let list=products.filter(p=>(activeFilter==='all'||p.category===activeFilter)&&(!q||(p.name+' '+p.category+' '+p.origin+' '+p.maker).toLowerCase().includes(q)));
-      if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
-      const grid=document.getElementById('productGrid');
-      if(!list.length){grid.innerHTML='<div class="empty">No matching preview products. Try another search or category.</div>';return;}
-      grid.innerHTML=list.map(p=>'<article class="product" tabindex="0" role="button" aria-label="View '+p.name+'" onclick="openProduct('+p.id+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProduct('+p.id+')}"><div class="product-art '+p.art+'"><span class="product-badge">Preview listing</span><div class="fabric"></div></div><div class="product-info"><div class="product-meta">'+p.category+'</div><div class="product-name">'+p.name+'</div><div class="product-origin">'+p.origin+'</div><div class="product-bottom"><span class="price">'+rupees(p.price)+'</span><button class="quick-add" aria-label="View '+p.name+'" onclick="event.stopPropagation();openProduct('+p.id+')">+</button></div></div></article>').join('');
+    const SUPABASE_URL = 'https://ecnxkiajhiepjsslyaqa.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_54TBZuH6AYZe24fR9YfMPQ_zOwVOLJB';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    let activeFilter='all',selectedProduct=null,quantity=1;
+    const rupees=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(n||0));
+    const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const categoryMap=()=>new Map(categories.map(c=>[c.id,c]));
+    function imageUrl(path){
+      if(!path)return '';
+      return client.storage.from('product-images').getPublicUrl(path).data.publicUrl;
     }
-    document.getElementById('searchInput').addEventListener('input',renderProducts);document.getElementById('sortSelect').addEventListener('change',renderProducts);
-    document.getElementById('filterChips').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;activeFilter=b.dataset.filter;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x===b));renderProducts();});
-    document.getElementById('categoryGrid').addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(!b)return;activeFilter=b.dataset.category;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x.dataset.filter===activeFilter));document.getElementById('shop').scrollIntoView({behavior:'smooth'});renderProducts();});
-    function openProduct(id){selectedProduct=products.find(p=>p.id===id);quantity=1;document.getElementById('qtyValue').textContent=quantity;document.getElementById('modalCategory').textContent=selectedProduct.category;document.getElementById('modalTitle').textContent=selectedProduct.name;document.getElementById('modalPrice').textContent=rupees(selectedProduct.price);document.getElementById('modalDescription').textContent=selectedProduct.description;document.getElementById('modalDetails').innerHTML='<b>Maker:</b> '+selectedProduct.maker+'<br><b>Origin:</b> '+selectedProduct.origin+'<br><b>Material / details:</b> '+selectedProduct.material+'<br><b>Availability:</b> Preview only — not for sale<br><b>Delivery:</b> India-wide shipping planned';document.getElementById('modalArt').className='product-art modal-art '+selectedProduct.art;document.getElementById('productModal').classList.add('open');document.body.style.overflow='hidden';}
+    function renderCategories(){
+      const grid=document.getElementById('categoryGrid');
+      if(!categories.length){
+        grid.innerHTML='<div class="empty">Collections are being prepared. Please check back soon.</div>';
+        return;
+      }
+      grid.innerHTML=categories.map((c,i)=>'<button class="category" data-category="'+escapeHtml(c.id)+'"><div class="cat-art cat-art-'+(i%7+1)+'"></div><div class="cat-info"><b>'+escapeHtml(c.name)+'</b><span>'+escapeHtml(c.description||'Explore this collection')+'</span></div></button>').join('');
+    }
+    function renderFilters(){
+      const el=document.getElementById('filterChips');
+      el.innerHTML='<button class="chip '+(activeFilter==='all'?'active':'')+'" data-filter="all">All products</button>'+categories.map(c=>'<button class="chip '+(activeFilter===c.id?'active':'')+'" data-filter="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</button>').join('');
+    }
+    function renderProducts(){
+      const q=document.getElementById('searchInput').value.trim().toLowerCase();
+      const sort=document.getElementById('sortSelect').value;
+      const names=categoryMap();
+      let list=products.filter(p=>(activeFilter==='all'||p.category_id===activeFilter)&&(!q||[p.name,p.short_description,p.description,p.origin,p.materials,names.get(p.category_id)?.name].join(' ').toLowerCase().includes(q)));
+      if(sort==='low')list.sort((a,b)=>Number(a.price_inr)-Number(b.price_inr));
+      if(sort==='high')list.sort((a,b)=>Number(b.price_inr)-Number(a.price_inr));
+      if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
+      if(sort==='featured')list.sort((a,b)=>Number(b.is_featured)-Number(a.is_featured)||new Date(b.published_at||b.created_at)-new Date(a.published_at||a.created_at));
+      const grid=document.getElementById('productGrid');
+      if(!list.length){
+        grid.innerHTML='<div class="empty">'+(products.length?'No products match this search. Try another collection or search term.':'No products have been published yet. New products will appear here once they are published by our team.')+'</div>';
+        return;
+      }
+      grid.innerHTML=list.map(p=>{
+        const cat=names.get(p.category_id)?.name||'Mizoram collection';
+        const photo=p.image_paths?.[0]?imageUrl(p.image_paths[0]):'';
+        const unavailable=p.inventory_status==='out_of_stock'||(p.inventory_quantity===0&&p.inventory_status==='in_stock');
+        return '<article class="product" tabindex="0" role="button" aria-label="View '+escapeHtml(p.name)+'" onclick="openProduct(\''+p.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProduct(\''+p.id+'\')}"><div class="product-art">'+(photo?'<img src="'+escapeHtml(photo)+'" alt="'+escapeHtml(p.name)+'" loading="lazy">':'<div class="image-placeholder">enga.in<br><span>Image coming soon</span></div>')+(unavailable?'<span class="product-badge">Out of stock</span>':'')+'</div><div class="product-info"><div class="product-meta">'+escapeHtml(cat)+'</div><div class="product-name">'+escapeHtml(p.name)+'</div><div class="product-origin">'+escapeHtml(p.origin||'Mizoram, India')+'</div><div class="product-bottom"><span class="price">'+rupees(p.price_inr)+'</span><button class="quick-add" aria-label="View '+escapeHtml(p.name)+'" onclick="event.stopPropagation();openProduct(\''+p.id+'\')">+</button></div></div></article>';
+      }).join('');
+    }
+    function showStatus(message,isError=false){
+      const el=document.getElementById('catalogueStatus');
+      el.textContent=message||'';
+      el.classList.toggle('error',!!isError);
+    }
+    async function loadCatalogue(){
+      showStatus('Loading the latest collection…');
+      const [categoryResult,productResult]=await Promise.all([
+        client.from('store_categories').select('id,name,slug,description,sort_order').eq('is_active',true).order('sort_order').order('name'),
+        client.from('store_products').select('id,category_id,name,slug,short_description,description,price_inr,compare_at_price_inr,inventory_quantity,inventory_status,image_paths,materials,dimensions,weight,care_instructions,origin,is_featured,published_at,created_at').eq('status','published').order('is_featured',{ascending:false}).order('published_at',{ascending:false})
+      ]);
+      if(categoryResult.error||productResult.error){
+        const error=categoryResult.error||productResult.error;
+        showStatus('The collection could not be loaded. Please refresh the page. ('+error.message+')',true);
+        document.getElementById('categoryGrid').innerHTML='<div class="empty">Collections are temporarily unavailable.</div>';
+        document.getElementById('productGrid').innerHTML='<div class="empty">Products are temporarily unavailable.</div>';
+        return;
+      }
+      categories=categoryResult.data||[];
+      products=productResult.data||[];
+      renderCategories();
+      renderFilters();
+      renderProducts();
+      showStatus('');
+    }
+    document.getElementById('searchInput').addEventListener('input',renderProducts);
+    document.getElementById('sortSelect').addEventListener('change',renderProducts);
+    document.getElementById('filterChips').addEventListener('click',e=>{
+      const b=e.target.closest('[data-filter]');if(!b)return;
+      activeFilter=b.dataset.filter;renderFilters();renderProducts();
+    });
+    document.getElementById('categoryGrid').addEventListener('click',e=>{
+      const b=e.target.closest('[data-category]');if(!b)return;
+      activeFilter=b.dataset.category;renderFilters();document.getElementById('shop').scrollIntoView({behavior:'smooth'});renderProducts();
+    });
+    function openProduct(id){
+      selectedProduct=products.find(p=>p.id===id);if(!selectedProduct)return;
+      const p=selectedProduct,cat=categoryMap().get(p.category_id)?.name||'Mizoram collection';
+      quantity=1;document.getElementById('qtyValue').textContent=quantity;
+      document.getElementById('modalCategory').textContent=cat;
+      document.getElementById('modalTitle').textContent=p.name;
+      document.getElementById('modalPrice').textContent=rupees(p.price_inr);
+      document.getElementById('modalDescription').textContent=p.description||p.short_description||'A thoughtfully curated product from Mizoram.';
+      const details=[];
+      if(p.origin)details.push('<b>Origin:</b> '+escapeHtml(p.origin));
+      if(p.materials)details.push('<b>Materials:</b> '+escapeHtml(p.materials));
+      if(p.dimensions)details.push('<b>Dimensions:</b> '+escapeHtml(p.dimensions));
+      if(p.weight)details.push('<b>Weight:</b> '+escapeHtml(p.weight));
+      if(p.care_instructions)details.push('<b>Care:</b> '+escapeHtml(p.care_instructions));
+      details.push('<b>Availability:</b> '+escapeHtml(p.inventory_status==='out_of_stock'?'Out of stock':p.inventory_status==='made_to_order'?'Made to order':p.inventory_status==='preorder'?'Pre-order':'In stock'));
+      document.getElementById('modalDetails').innerHTML=details.join('<br>');
+      const photo=p.image_paths?.[0]?imageUrl(p.image_paths[0]):'';
+      document.getElementById('modalArt').className='product-art modal-art';
+      document.getElementById('modalArt').innerHTML=photo?'<img src="'+escapeHtml(photo)+'" alt="'+escapeHtml(p.name)+'">':'<div class="image-placeholder">enga.in<br><span>Image coming soon</span></div>';
+      document.getElementById('productModal').classList.add('open');document.body.style.overflow='hidden';
+    }
     function closeModal(){document.getElementById('productModal').classList.remove('open');document.body.style.overflow='';}
     function changeQty(n){quantity=Math.max(1,Math.min(20,quantity+n));document.getElementById('qtyValue').textContent=quantity;}
-    function addToCart(){showToast('This is a design preview. Checkout and cart will be connected after product and order setup.');}
+    function addToCart(){showToast('Online ordering is not enabled yet. Checkout will be added in a later stage.');}
     function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
-    document.getElementById('productModal').addEventListener('click',e=>{if(e.target.id==='productModal')closeModal();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});document.getElementById('year').textContent=new Date().getFullYear();renderProducts();
+    document.getElementById('productModal').addEventListener('click',e=>{if(e.target.id==='productModal')closeModal();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+    document.getElementById('year').textContent=new Date().getFullYear();
+    loadCatalogue();
   </script>
 </body>
 </html>
