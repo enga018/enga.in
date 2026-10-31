@@ -25,7 +25,7 @@ function toHex(bytes: ArrayBuffer) {
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function hmacSha256(secret: string, message: string) {
+async function hmacSha256(secret: string, message: Uint8Array) {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -33,7 +33,7 @@ async function hmacSha256(secret: string, message: string) {
     false,
     ["sign"],
   );
-  return toHex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message)));
+  return toHex(await crypto.subtle.sign("HMAC", key, message));
 }
 
 function safeEqual(a: string, b: string) {
@@ -47,9 +47,9 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    // Verify the exact request body before parsing or re-serialising JSON.
-    const rawBody = await req.text();
-    if (!rawBody || rawBody.length > 1_000_000) {
+    // Keep the original bytes intact: Razorpay signs the raw HTTP request body.
+    const rawBody = new Uint8Array(await req.arrayBuffer());
+    if (!rawBody.length || rawBody.length > 1_000_000) {
       return json({ error: "Invalid webhook body" }, 400);
     }
 
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
 
     let event: any;
     try {
-      event = JSON.parse(rawBody);
+      event = JSON.parse(new TextDecoder().decode(rawBody));
     } catch {
       return json({ error: "Invalid JSON payload" }, 400);
     }
@@ -110,7 +110,6 @@ Deno.serve(async (req: Request) => {
 
     const orders = await orderResponse.json();
     if (!Array.isArray(orders) || orders.length !== 1) {
-      // A valid payment event for an unknown order must not trigger retries forever.
       console.error("Captured payment has no matching store order", payment.order_id);
       return json({ received: true, ignored: true, reason: "order_not_found" });
     }
@@ -125,7 +124,6 @@ Deno.serve(async (req: Request) => {
       if (order.razorpay_payment_id === payment.id) {
         return json({ received: true, success: true, alreadyProcessed: true });
       }
-      // A second captured payment for an already-paid order needs manual refund review.
       console.error("Additional captured payment for an already-paid order", order.order_number, payment.id);
       return json({ received: true, ignored: true, reason: "additional_payment_requires_review" });
     }
@@ -149,12 +147,27 @@ Deno.serve(async (req: Request) => {
 
     if (!finalizeResponse.ok) {
       console.error("Webhook order finalization failed", await finalizeResponse.text());
-      // Non-2xx tells Razorpay to retry delivery.
       throw new Error("Could not finalize the captured payment");
     }
 
     const finalized = await finalizeResponse.json();
     const result = Array.isArray(finalized) ? finalized[0] : finalized;
+
+    // Re-read after the row-locked RPC to detect a concurrent second payment.
+    const confirmUrl = new URL(`${projectUrl}/rest/v1/store_orders`);
+    confirmUrl.searchParams.set("select", "razorpay_payment_id,payment_status");
+    confirmUrl.searchParams.set("id", `eq.${order.id}`);
+    const confirmResponse = await fetch(confirmUrl, { headers: apiHeaders(serviceKey) });
+    if (!confirmResponse.ok) throw new Error("Could not confirm finalized payment state");
+    const [confirmed] = await confirmResponse.json();
+    if (
+      confirmed?.payment_status !== "paid" ||
+      confirmed?.razorpay_payment_id !== payment.id
+    ) {
+      console.error("Additional captured payment requires manual review", order.order_number, payment.id);
+      return json({ received: true, ignored: true, reason: "additional_payment_requires_review" });
+    }
+
     return json({
       received: true,
       success: true,
