@@ -357,10 +357,10 @@
    if(error)throw new Error(error.message||'Could not reach the rate checker.');
    if(!data?.ok)throw new Error(data?.message||'Shiprocket could not return courier rates.');
    const couriers=Array.isArray(data.couriers)?data.couriers:[];
-   const rows=couriers.map(c=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td style="text-align:right">'+money(c.rate)+'</td><td style="text-align:right">'+esc(c.chargeWeight||'—')+' kg</td><td>'+esc(c.etd||'—')+'</td></tr>').join('');
+   const rows=couriers.map(c=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td style="text-align:right">'+money(c.rate)+'</td><td style="text-align:right">'+(c.rtoCharges==null||!Number.isFinite(Number(c.rtoCharges))?'Not provided':money(c.rtoCharges))+'</td><td style="text-align:right">'+esc(c.chargeWeight||'—')+' kg</td><td>'+esc(c.etd||'—')+'</td></tr>').join('');
    host.innerHTML='<h3>Courier options · '+esc(data.originPin)+' → '+esc(data.destinationPin)+'</h3>'+
     '<div class="subline">Prepaid · Actual weight '+esc(data.actualWeightKg)+' kg · Volumetric estimate '+esc(data.volumetricWeightKg)+' kg · Parcel 30 × 25 × 5 cm</div>'+
-    (rows?'<div class="table-wrap" style="margin-top:10px"><table style="min-width:0"><thead><tr><th>Courier</th><th style="text-align:right">Rate</th><th style="text-align:right">Charge weight</th><th>ETA</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="subline">'+esc(data.message)+'</p>')+
+    (rows?'<div class="table-wrap" style="margin-top:10px"><table style="min-width:0"><thead><tr><th>Courier</th><th style="text-align:right">Forward rate</th><th style="text-align:right">RTO charge</th><th style="text-align:right">Charge weight</th><th>ETA</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="subline">'+esc(data.message)+'</p>')+
     '<p class="subline" style="margin-top:10px">Indicative Shiprocket quote only. No order, AWB, pickup or shipment was created.</p>';
   }catch(error){
    host.innerHTML='<h3>Rate check unavailable</h3><p class="order-detail-error">'+esc(error?.message||'Unknown error')+'</p>';
