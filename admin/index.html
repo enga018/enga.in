@@ -145,7 +145,7 @@
     const file=$('pImage').files?.[0];
     if(file){const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');const path='catalogue/'+crypto.randomUUID()+'.'+ext;const {error:upErr}=await client.storage.from(BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(upErr)throw upErr;imagePaths=[path]}
     const payload={category_id:$('pCategory').value||null,name,slug,sku:$('pSku').value.trim()||null,short_description:$('pShort').value.trim()||null,description:$('pDescription').value.trim()||null,price_inr:Number($('pPrice').value),compare_at_price_inr:$('pCompare').value===''?null:Number($('pCompare').value),inventory_quantity:Math.max(0,Number($('pStock').value||0)),inventory_status:$('pInventory').value,status:$('pStatus').value,image_paths:imagePaths,materials:$('pMaterials').value.trim()||null,dimensions:$('pDimensions').value.trim()||null,weight:$('pWeight').value.trim()||null,care_instructions:$('pCare').value.trim()||null,origin:$('pOrigin').value.trim()||'Mizoram, India',is_featured:$('pFeatured').checked,updated_at:new Date().toISOString()};
-    if(payload.status==='published')payload.published_at=new Date().toISOString();
+    if(payload.status==='published'){const existing=products.find(p=>p.id===id);if(!existing?.published_at)payload.published_at=new Date().toISOString();}
     const result=id?await client.from('store_products').update(payload).eq('id',id):await client.from('store_products').insert(payload);
     if(result.error)throw result.error;
     closeModal('productModal');toast(id?'Product updated.':'Product added as '+payload.status+'.');await loadAll();
