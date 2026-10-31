@@ -14,6 +14,46 @@
 .modal-backdrop{position:fixed;inset:0;background:#12251fbd;z-index:30;display:none;align-items:center;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{background:var(--paper);width:min(760px,100%);max-height:94vh;overflow:auto;box-shadow:var(--shadow)}.modal-head{position:sticky;top:0;background:var(--paper);padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;z-index:1}.modal-head h2{font:400 24px Georgia,serif;color:var(--forest);margin:0}.close{border:0;background:none;font-size:25px;color:var(--forest)}.modal-body{padding:20px 22px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.span-2{grid-column:1/-1}.form-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:16px;border-top:1px solid var(--line);margin-top:10px}.image-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:12px}.image-tile{position:relative;border:1px solid var(--line);background:#f7f6f0;padding:6px}.image-tile img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.image-tile .tile-actions{display:flex;gap:4px;margin-top:6px}.image-tile button{flex:1;padding:6px 3px;border:1px solid var(--line);background:#fffefa;color:var(--forest);font-size:10px}.image-tile button:disabled{opacity:.4}.image-tile .main-label{position:absolute;top:10px;left:10px;background:var(--forest);color:white;padding:4px 6px;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.image-help{font-size:11px;color:var(--muted);margin-top:8px}.checkline{display:flex;align-items:center;gap:8px;font-size:12px;color:#536057;margin:12px 0}.checkline input{accent-color:var(--forest)}.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);background:var(--forest);color:#fff;padding:12px 18px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:calc(100% - 30px)}.toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:850px){.login-shell{grid-template-columns:1fr}.login-art{display:none}.login-side{min-height:100vh}.layout{grid-template-columns:1fr}.sidebar{display:flex;gap:5px;padding:8px 14px;border-right:0;border-bottom:1px solid var(--line);overflow:auto}.side-label,.sidebar-note{display:none}.nav-btn{width:auto;white-space:nowrap;padding:10px 12px}.nav-btn span{display:none}.main{padding-top:25px}.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.topbar{height:62px;padding:0 15px}.brand{font-size:27px}.user-email{display:none}.main{padding:22px 14px 50px}.page-head{align-items:flex-start;flex-direction:column}.page-head h1{font-size:31px}.page-head>.btn{width:100%}.stats{gap:8px}.stat{padding:14px}.stat .value{font-size:26px}.panel-head{padding:14px}.panel-body{padding:12px}.form-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.modal-body{padding:15px}.modal-head{padding:15px}.image-row{align-items:flex-start}}
+
+/* Order management */
+.order-filters{display:grid;grid-template-columns:minmax(210px,1.6fr) repeat(4,minmax(125px,1fr)) auto;gap:9px;align-items:end}
+.order-filter{display:grid;gap:6px;min-width:0}
+.order-filter label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.order-filter input,.order-filter select{width:100%;min-width:0;padding:10px 11px;border:1px solid var(--line);background:#fffefa;color:var(--ink);font-size:12px}
+.order-list{display:grid;gap:0}
+.order-row{display:grid;grid-template-columns:minmax(160px,1.25fr) minmax(130px,1fr) minmax(110px,.8fr) minmax(105px,.7fr) minmax(115px,.8fr) auto;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line)}
+.order-row:last-child{border-bottom:0}
+.order-primary{font-weight:750;color:var(--forest);font-size:12px}
+.order-customer{font-size:12px;color:var(--ink);font-weight:650}
+.order-meta{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;overflow-wrap:anywhere}
+.order-total{font-weight:750;color:var(--forest);font-variant-numeric:tabular-nums}
+.order-badges{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.pill.pending{background:#f4eddf;color:#8a6a35}.pill.paid{background:#e5f0e7;color:#326b50}
+.pill.failed,.pill.refunded,.pill.cancelled{background:#f4e9e6;color:#945148}
+.pill.partially_refunded{background:#f3e9d9;color:#8a6a35}
+.stock-alert{display:inline-flex;align-items:center;gap:5px;background:#fff0df;color:#92551d;border:1px solid #efd2ad;padding:5px 8px;font-size:9px;font-weight:750;letter-spacing:.05em;text-transform:uppercase}
+.order-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.order-pager .actions{align-items:center}
+.order-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.order-detail-card{border:1px solid var(--line);background:#fffefa;padding:15px;min-width:0}
+.order-detail-card h3{font:400 17px Georgia,serif;color:var(--forest);margin:0 0 12px}
+.order-detail-card.full{grid-column:1/-1}
+.order-kv{display:grid;grid-template-columns:minmax(105px,.8fr) minmax(0,1.2fr);gap:8px;padding:7px 0;border-bottom:1px solid #f0eee8;font-size:11px}
+.order-kv:last-child{border-bottom:0}
+.order-kv span:first-child{color:var(--muted)}
+.order-kv strong{color:var(--ink);font-weight:650;overflow-wrap:anywhere;text-align:right}
+.order-items{width:100%;min-width:0}.order-items th,.order-items td{padding:10px 8px}
+.order-item-name{font-weight:650;color:var(--forest)}
+.order-summary{margin-left:auto;width:min(310px,100%);padding-top:12px}
+.order-summary .order-kv.total{border-top:1px solid var(--line);font-size:13px;font-weight:800}
+.order-detail-actions{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:14px}
+.order-detail-actions .field{margin:0;min-width:190px;flex:1}
+.order-detail-actions .field select{width:100%;padding:11px;border:1px solid var(--line);background:#fffefa}
+.order-detail-error{margin-top:10px;color:var(--red);font-size:11px}
+@media(max-width:1100px){.order-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.order-row{grid-template-columns:minmax(150px,1.2fr) minmax(130px,1fr) minmax(100px,.8fr) minmax(105px,.8fr) auto}.order-row .order-created{display:none}}
+@media(max-width:760px){.order-filters{grid-template-columns:1fr 1fr}.order-filters .search-filter{grid-column:1/-1}.order-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:14px}.order-row .order-customer-wrap{grid-column:1}.order-row .order-total-wrap{grid-column:2;grid-row:1;text-align:right}.order-row .order-payment{grid-column:1}.order-row .order-fulfilment{grid-column:2;grid-row:2;align-items:flex-end}.order-row .order-actions{grid-column:1/-1;display:flex;justify-content:flex-end}.order-detail-grid{grid-template-columns:1fr}.order-detail-card.full{grid-column:auto}.order-detail-actions{align-items:stretch}.order-detail-actions .field{min-width:100%}}
+@media(max-width:480px){.order-filters{grid-template-columns:1fr}.order-filters .search-filter{grid-column:auto}.order-pager{align-items:flex-start;flex-direction:column}.order-kv{grid-template-columns:100px minmax(0,1fr)}}
+
 </style>
 </head>
 <body>
@@ -24,7 +64,7 @@
 <section id="appView" class="app hidden">
  <header class="topbar"><a class="brand" href="/">enga<span>.</span>in</a><div class="top-right"><span class="user-email" id="signedInEmail"></span><button class="btn secondary" id="signOutButton">Sign out</button></div></header>
  <div class="layout">
-  <aside class="sidebar"><div class="side-label">Store management</div><button class="nav-btn active" data-page="overview"><span>⌂</span>Overview</button><button class="nav-btn" data-page="products"><span>▦</span>Products</button><button class="nav-btn" data-page="categories"><span>◇</span>Categories</button><div class="sidebar-note">Public storefront remains open to customers. Only this management area requires administrator access.</div></aside>
+  <aside class="sidebar"><div class="side-label">Store management</div><button class="nav-btn active" data-page="overview"><span>⌂</span>Overview</button><button class="nav-btn" data-page="products"><span>▦</span>Products</button><button class="nav-btn" data-page="categories"><span>◇</span>Categories</button><button class="nav-btn" data-page="orders"><span>▤</span>Orders</button><div class="sidebar-note">Public storefront remains open to customers. Only this management area requires administrator access.</div></aside>
   <main class="main">
    <section class="page" id="page-overview">
     <div class="page-head"><div><div class="eyebrow">Store overview</div><h1>Good day.</h1><p>Your catalogue at a glance.</p></div><button class="btn" id="overviewAddProduct">＋ Add product</button></div>
@@ -39,6 +79,24 @@
    <section class="page hidden" id="page-categories">
     <div class="page-head"><div><div class="eyebrow">Catalogue structure</div><h1>Categories</h1><p>Organise the store into clear collections.</p></div><button class="btn" id="addCategoryButton">＋ Add category</button></div>
     <div class="panel"><div class="panel-head"><h3>Store categories</h3><span class="muted" id="categoryCount" style="font-size:11px"></span></div><div class="table-wrap" id="categoriesTable"></div></div>
+
+   <section class="page hidden" id="page-orders">
+    <div class="page-head"><div><div class="eyebrow">Sales & fulfilment</div><h1>Orders</h1><p>Review customer orders, verify payment records and manage fulfilment.</p></div><button class="btn secondary" id="refreshOrdersButton" type="button">↻ Refresh</button></div>
+    <div class="panel"><div class="panel-head"><h3>Find orders</h3><span class="muted" id="orderResultCount" style="font-size:11px">Loading orders…</span></div>
+     <div class="panel-body"><form class="order-filters" id="orderFilters">
+      <div class="order-filter search-filter"><label for="orderSearch">Order / customer</label><input id="orderSearch" type="search" placeholder="Order number, name, mobile or email" maxlength="80"></div>
+      <div class="order-filter"><label for="orderDateFrom">From date</label><input id="orderDateFrom" type="date"></div>
+      <div class="order-filter"><label for="orderDateTo">To date</label><input id="orderDateTo" type="date"></div>
+      <div class="order-filter"><label for="orderPaymentFilter">Payment</label><select id="orderPaymentFilter"><option value="">All payments</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option><option value="partially_refunded">Partially refunded</option></select></div>
+      <div class="order-filter"><label for="orderStatusFilter">Fulfilment</label><select id="orderStatusFilter"><option value="">All statuses</option><option value="pending_payment">Pending payment</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div>
+      <div class="actions"><button class="btn" type="submit">Apply</button><button class="btn secondary" type="button" id="resetOrderFilters">Reset</button></div>
+     </form></div>
+    </div>
+    <div class="panel"><div class="panel-head"><h3>Order history</h3><span class="muted" style="font-size:10px">Newest first · 25 per page</span></div>
+     <div id="ordersList"><div class="empty-state"><b>Loading orders</b>Please wait while order history is retrieved.</div></div>
+     <div class="order-pager"><span id="orderPageInfo">—</span><div class="actions"><button class="btn secondary" type="button" id="ordersPrev" disabled>Previous</button><button class="btn secondary" type="button" id="ordersNext" disabled>Next</button></div></div>
+    </div>
+   </section>
    </section>
   </main>
  </div>
@@ -55,6 +113,8 @@
  <label class="checkline span-2"><input id="pFeatured" type="checkbox"> Feature this product on the storefront</label>
  </div><div id="productMessage"></div><div class="form-actions"><button class="btn secondary" type="button" data-close="productModal">Cancel</button><button class="btn" id="saveProductButton" type="submit">Save product</button></div></div></form></div>
 <div class="modal-backdrop" id="categoryModal"><form class="modal" id="categoryForm" style="width:min(520px,100%)"><div class="modal-head"><h2 id="categoryModalTitle">Add category</h2><button class="close" type="button" data-close="categoryModal" aria-label="Close">×</button></div><div class="modal-body"><input type="hidden" id="categoryId"><div class="field"><label for="cName">Category name *</label><input id="cName" required maxlength="100"></div><div class="field"><label for="cDescription">Description</label><textarea id="cDescription"></textarea></div><div class="field"><label for="cOrder">Display order</label><input id="cOrder" type="number" min="0" step="1" value="0"></div><label class="checkline"><input id="cActive" type="checkbox" checked> Active category</label><div id="categoryMessage"></div><div class="form-actions"><button class="btn secondary" type="button" data-close="categoryModal">Cancel</button><button class="btn" type="submit">Save category</button></div></div></form></div>
+
+<div class="modal-backdrop" id="orderDetailModal"><section class="modal" style="width:min(900px,100%)"><div class="modal-head"><h2 id="orderDetailTitle">Order details</h2><button class="close" type="button" data-close="orderDetailModal" aria-label="Close">×</button></div><div class="modal-body" id="orderDetailBody"><div class="empty-state">Loading order details…</div></div></section></div>
 <div class="toast" id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
