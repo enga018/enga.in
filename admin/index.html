@@ -337,9 +337,34 @@
      '<div class="order-summary">'+kv('Subtotal',money(order.subtotal_inr))+kv('Shipping',Number(order.shipping_fee_inr)===0?'FREE':money(order.shipping_fee_inr))+'<div class="order-kv total"><span>Total</span><strong>'+money(order.total_inr)+'</strong></div></div>'+
     '</section>'+
    '</div>'+
-   '<div class="order-detail-actions"><div class="field"><label for="orderFulfilmentSelect">Update fulfilment status</label><select id="orderFulfilmentSelect">'+statusOptions(order)+'</select></div><button class="btn" type="button" id="saveOrderStatus" '+(['delivered','cancelled'].includes(order.order_status)?'disabled':'')+'>Save status</button></div>'+
-   '<p class="subline">Payment status and Razorpay verification details are read-only here. Only fulfilment status can be changed.</p><div id="orderDetailError" class="order-detail-error" role="alert"></div>';
+   '<div class="order-detail-actions"><button class="btn secondary" type="button" id="checkCourierRates">Check courier rates</button><div class="field"><label for="orderFulfilmentSelect">Update fulfilment status</label><select id="orderFulfilmentSelect">'+statusOptions(order)+'</select></div><button class="btn" type="button" id="saveOrderStatus" '+(['delivered','cancelled'].includes(order.order_status)?'disabled':'')+'>Save status</button></div>'+
+   '<div class="order-detail-card full" id="courierRateResults" style="margin-top:14px;display:none"></div>'+
+   '<p class="subline">Payment status and Razorpay verification details are read-only here. Courier rate checks do not create shipments or request pickup.</p><div id="orderDetailError" class="order-detail-error" role="alert"></div>';
   $('saveOrderStatus')?.addEventListener('click',saveOrderStatus);
+  $('checkCourierRates')?.addEventListener('click',checkCourierRates);
+ }
+ async function checkCourierRates(){
+  if(!activeOrder)return;
+  const button=$('checkCourierRates'),host=$('courierRateResults');
+  setBusy(button,true,'Checking rates…');host.style.display='block';
+  host.innerHTML='<h3>Courier options</h3><div class="subline">Checking prepaid serviceability using estimated packed parcel details…</div>';
+  try{
+   const {data,error}=await client.functions.invoke('shiprocket-rate-check',{body:{
+    delivery_postcode:String(activeOrder.pincode||'').trim(),
+    weight_kg:0.55,length_cm:30,breadth_cm:25,height_cm:5,
+    declared_value:Number(activeOrder.total_inr||0)
+   }});
+   if(error)throw new Error(error.message||'Could not reach the rate checker.');
+   if(!data?.ok)throw new Error(data?.message||'Shiprocket could not return courier rates.');
+   const couriers=Array.isArray(data.couriers)?data.couriers:[];
+   const rows=couriers.map(c=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td style="text-align:right">'+money(c.rate)+'</td><td style="text-align:right">'+esc(c.chargeWeight||'—')+' kg</td><td>'+esc(c.etd||'—')+'</td></tr>').join('');
+   host.innerHTML='<h3>Courier options · '+esc(data.originPin)+' → '+esc(data.destinationPin)+'</h3>'+
+    '<div class="subline">Prepaid · Actual weight '+esc(data.actualWeightKg)+' kg · Volumetric estimate '+esc(data.volumetricWeightKg)+' kg · Parcel 30 × 25 × 5 cm</div>'+
+    (rows?'<div class="table-wrap" style="margin-top:10px"><table style="min-width:0"><thead><tr><th>Courier</th><th style="text-align:right">Rate</th><th style="text-align:right">Charge weight</th><th>ETA</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="subline">'+esc(data.message)+'</p>')+
+    '<p class="subline" style="margin-top:10px">Indicative Shiprocket quote only. No order, AWB, pickup or shipment was created.</p>';
+  }catch(error){
+   host.innerHTML='<h3>Rate check unavailable</h3><p class="order-detail-error">'+esc(error?.message||'Unknown error')+'</p>';
+  }finally{setBusy(button,false,'Check courier rates')}
  }
  async function saveOrderStatus(){
   if(!activeOrder)return;
