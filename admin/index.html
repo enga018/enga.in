@@ -81,7 +81,7 @@
     <div class="panel"><div class="panel-head"><h3>Store categories</h3><span class="muted" id="categoryCount" style="font-size:11px"></span></div><div class="table-wrap" id="categoriesTable"></div></div>
    </section>
    <section class="page hidden" id="page-orders">
-    <div class="page-head"><div><div class="eyebrow">Sales & fulfilment</div><h1>Orders</h1><p>Review customer orders, verify payment records and manage fulfilment.</p></div><button class="btn secondary" id="refreshOrdersButton" type="button">↻ Refresh</button></div>
+    <div class="page-head"><div><div class="eyebrow">Sales & fulfilment</div><h1>Orders</h1><p>Review customer orders, verify payment records and manage fulfilment.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="testShiprocketButton" type="button">Test Shiprocket</button><button class="btn secondary" id="refreshOrdersButton" type="button">↻ Refresh</button></div></div>
     <div class="panel"><div class="panel-head"><h3>Find orders</h3><span class="muted" id="orderResultCount" style="font-size:11px">Loading orders…</span></div>
      <div class="panel-body"><form class="order-filters" id="orderFilters">
       <div class="order-filter search-filter"><label for="orderSearch">Order / customer</label><input id="orderSearch" type="search" placeholder="Order number, name, mobile or email" maxlength="80"></div>
@@ -296,6 +296,17 @@
  $('orderFilters').addEventListener('submit',e=>{e.preventDefault();loadOrders(true)});
  $('resetOrderFilters').addEventListener('click',()=>{$('orderFilters').reset();loadOrders(true)});
  $('refreshOrdersButton').addEventListener('click',()=>loadOrders(false));
+ $('testShiprocketButton').addEventListener('click',async()=>{
+  const button=$('testShiprocketButton');setBusy(button,true,'Testing…');
+  try{
+   const {data,error}=await client.functions.invoke('shiprocket-connection-test',{body:{}});
+   if(error)throw new Error(error.message||'Could not reach the connection test.');
+   if(!data?.connected)throw new Error(data?.message||'Shiprocket connection could not be verified.');
+   const account=data.accountEmail?' ('+data.accountEmail+')':'';
+   toast('Shiprocket connection successful'+account+'. No shipment was created.');
+  }catch(error){toast('Shiprocket connection failed: '+(error?.message||'Unknown error'));console.error('Shiprocket connection test:',error)}
+  finally{setBusy(button,false,'Test Shiprocket')}
+ });
  $('ordersPrev').addEventListener('click',()=>{if(orderPage>0){orderPage--;loadOrders(false)}});
  $('ordersNext').addEventListener('click',()=>{if((orderPage+1)*orderPageSize<orderCount){orderPage++;loadOrders(false)}});
  function statusOptions(order){
